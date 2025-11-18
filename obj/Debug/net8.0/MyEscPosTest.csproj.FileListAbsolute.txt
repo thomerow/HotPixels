@@ -1,0 +1,14 @@
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\bin\Debug\net8.0\MyEscPosTest.exe
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\bin\Debug\net8.0\MyEscPosTest.deps.json
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\bin\Debug\net8.0\MyEscPosTest.runtimeconfig.json
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\bin\Debug\net8.0\MyEscPosTest.dll
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\bin\Debug\net8.0\MyEscPosTest.pdb
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.GeneratedMSBuildEditorConfig.editorconfig
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.AssemblyInfoInputs.cache
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.AssemblyInfo.cs
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.csproj.CoreCompileInputs.cache
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.dll
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\refint\MyEscPosTest.dll
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.pdb
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\MyEscPosTest.genruntimeconfig.cache
+c:\Users\thorsten\projects\Thermodrucker\CSharp\MyEscPosTest\obj\Debug\net8.0\ref\MyEscPosTest.dll
