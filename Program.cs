@@ -26,6 +26,10 @@ class Program
 
         // An Drucker senden
         RawPrinter.SendBytes(printerName, escposImage);
+
+        // Vier Zeilenumbrüche senden, damit man die Ausgabe sieht und das Papier abreißen kann
+        byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
+        RawPrinter.SendBytes(printerName, lineFeeds);
     }
 
     /// <summary>
