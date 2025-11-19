@@ -46,7 +46,17 @@ class Program
         int dataLen = widthBytes * scaledHeight;
         byte[] imageData = new byte[dataLen];
         
-        // Bilddaten vorbereiten
+        // Bilddaten vorbereiten und per Floyd Steinberg dithering in 1 bit Bilddaten umwandeln
+
+        float[,] grayData = new float[resized.Width, resized.Height];
+        for (int y = 0; y < resized.Height; ++y)
+        {
+            for (int x = 0; x < resized.Width; ++x)
+            {
+                grayData[x, y] = GetPercievedBrightness(resized.GetPixel(x, y));
+            }
+        }
+
         int index = 0;
         for (int y = 0; y < resized.Height; ++y)
         {
@@ -55,11 +65,19 @@ class Program
                 byte b = 0;             
                 for (int bit = 0; bit < 8; ++bit)
                 {
-                    Color c = resized.GetPixel(bx * 8 + bit, y);
-                    if (GetPercievedBrightness(c) < 128)
-                    {
-                        b |= (byte)(0x80 >> bit); // Bit setzen
-                    }
+                    int x = bx * 8 + bit;
+                    float oldValue = grayData[x, y];
+                    float newValue = (oldValue < 128) ? 0 : 255;
+
+                    if (newValue == 0) b |= (byte)(0x80 >> bit);
+
+                    float quantError = oldValue - newValue;
+
+                    // Fehlerverteilung nach Floyd-Steinberg
+                    if (x + 1 < resized.Width) grayData[x + 1, y] += quantError * 7 / 16;
+                    if (x - 1 >= 0 && y + 1 < resized.Height) grayData[x - 1, y + 1] += quantError * 3 / 16;
+                    if (y + 1 < resized.Height) grayData[x, y + 1] += quantError * 5 / 16;
+                    if (x + 1 < resized.Width && y + 1 < resized.Height) grayData[x + 1, y + 1] += quantError * 1 / 16;
                 }
                 imageData[index++] = b;
             }
