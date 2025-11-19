@@ -64,12 +64,10 @@ byte[] escPosTestPatternHeader = [
 // Header kopieren
 Buffer.BlockCopy(escPosTestPatternHeader, 0, escPosTestPattern, 0, escPosTestPatternHeader.Length);
 
-// Bilddaten. Jedes Byte enthält ein alternierendes Muster von 10101010 bzw. 01010101. 
-// Jede zweite Zeile ist invertiert.
+// Bilddaten. Jedes Byte enthält ein alternierendes Muster von 10101010 (bzw. 01010101 für jede zweite Zeile).
 for (int i = 0; i < imageHeightDots; ++i) { // i = Zeilenindex
+    byte patternByte = (byte)((i % 2 == 0) ? 0xAA : 0x55); // 0xAA = 10101010, 0x55 = 01010101
     for (int j = 0; j < imageWidthBytes; j++) { // j = Byte-Index innerhalb der Zeile
-        byte patternByte = (byte)((j % 2 == 0) ? 0xAA : 0x55); // 0xAA = 10101010, 0x55 = 01010101
-        if (i % 2 == 1) patternByte = (byte)~patternByte; // Invertieren für ungerade Zeilen
         escPosTestPattern[8 + i * imageWidthBytes + j] = patternByte;
     }
 }
