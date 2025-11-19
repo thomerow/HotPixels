@@ -73,7 +73,8 @@ class Program
 
             0x1D, 0x76, 0x30, 0x00, // GS 'v' '0' m  (m = 0: normal)
             (byte)widthBytes, 0,    // xL, xH (Breite in Bytes)
-            (byte)scaledHeight, 0,  // yL, yH (Höhe in Dots)
+            (byte)(scaledHeight & 0xFF),        // yL
+            (byte)((scaledHeight >> 8) & 0xFF), // yH
         ];
         // Header kopieren
         Buffer.BlockCopy(escposImageHeader, 0, result, 0, escposImageHeader.Length);
