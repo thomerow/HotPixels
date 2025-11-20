@@ -3,6 +3,7 @@ using System.Text;
 using System.Drawing;
 using MyEscPosTest.Enums;
 using System.Globalization;
+using MyEscPosTest;
 
 partial class Program {
 
@@ -137,21 +138,21 @@ partial class Program {
 
 		if (!s_ditherMode.IsOrderedDither()) {
 			ditherKernel = s_ditherMode switch {
-				DitherMode.FloydSteinberg => Kernel_FloydSteinberg,
-				DitherMode.Jarvis => Kernel_Jarvis,
-				DitherMode.Stucki => Kernel_Stucki,
-				DitherMode.Burkes => Kernel_Burkes,
-				DitherMode.SierraLite => Kernel_SierraLite,
-				DitherMode.Atkinson => Kernel_Atkinson,
+				DitherMode.FloydSteinberg => DitherKernel.FloydSteinberg,
+				DitherMode.Jarvis => DitherKernel.Jarvis,
+				DitherMode.Stucki => DitherKernel.Stucki,
+				DitherMode.Burkes => DitherKernel.Burkes,
+				DitherMode.SierraLite => DitherKernel.SierraLite,
+				DitherMode.Atkinson => DitherKernel.Atkinson,
 				_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
 			};
 		}
 		else {
 			getThreshold = s_ditherMode switch {
-				DitherMode.Bayer2x2 => GetBayer2x2Threshold,
-				DitherMode.Bayer4x4 => GetBayer4x4Threshold,
-				DitherMode.Bayer8x8 => GetBayer8x8Threshold,
-				DitherMode.Halftone4x4 => GetHalftone4x4Threshold,
+				DitherMode.Bayer2x2 => HalftoneKernel.GetBayer2x2Threshold,
+				DitherMode.Bayer4x4 => HalftoneKernel.GetBayer4x4Threshold,
+				DitherMode.Bayer8x8 => HalftoneKernel.GetBayer8x8Threshold,
+				DitherMode.Halftone4x4 => HalftoneKernel.GetHalftone4x4Threshold,
 				_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
 			};
 		}
@@ -183,68 +184,6 @@ partial class Program {
 	}
 
 	#region Hilfsmethoden
-
-	static readonly int[,] Bayer2x2 = { { 0, 2 }, { 3, 1 } };
-
-	static readonly int[,] Bayer4x4 = {
-		{  0,  8,  2, 10 },
-		{ 12,  4, 14,  6 },
-		{  3, 11,  1,  9 },
-		{ 15,  7, 13,  5 }
-	};
-
-	static readonly int[,] Bayer8x8 = {
-		{  0, 32,  8, 40,  2, 34, 10, 42 },
-		{ 48, 16, 56, 24, 50, 18, 58, 26 },
-		{ 12, 44,  4, 36, 14, 46,  6, 38 },
-		{ 60, 28, 52, 20, 62, 30, 54, 22 },
-		{  3, 35, 11, 43,  1, 33,  9, 41 },
-		{ 51, 19, 59, 27, 49, 17, 57, 25 },
-		{ 15, 47,  7, 39, 13, 45,  5, 37 },
-		{ 63, 31, 55, 23, 61, 29, 53, 21 }
-	};
-
-	static readonly int[,] Halftone4x4 = {
-		{  7, 13, 11,  4 },
-		{ 12, 16, 14,  8 },
-		{ 10, 15,  6,  2 },
-		{  5,  9,  3,  1 }
-	};
-
-	/// <summary>
-	/// Gibt den Schwellwert für das Bayer 2x2 Dithering-Muster zurück.
-	/// </summary>
-	static float GetBayer2x2Threshold(int x, int y) {
-		int v = Bayer2x2[y & 1, x & 1]; // y % 2, x % 2
-		// (v + 0.5) / 4 → 0..1, *255 → 0..255
-		return (float) ((v + 0.5) / 4.0 * 255.0);
-	}
-
-	/// <summary>
-	/// Gibt den Schwellwert für das Bayer 4x4 Dithering-Muster zurück.
-	/// </summary>
-	static float GetBayer4x4Threshold(int x, int y) {
-		int v = Bayer4x4[y & 3, x & 3]; // y % 4, x % 4
-		// (v + 0.5) / 16 → 0..1, *255 → 0..255
-		return (float) ((v + 0.5) / 16.0 * 255.0);
-	}
-
-	/// <summary>
-	/// Gibt den Schwellwert für das Bayer 8x8 Dithering-Muster zurück.
-	/// </summary>
-	static float GetBayer8x8Threshold(int x, int y) {
-		int v = Bayer8x8[y & 7, x & 7]; // y % 8, x % 8
-		// (v + 0.5) / 64 → 0..1, *255 → 0..255
-		return (float) ((v + 0.5) / 64.0 * 255.0);
-	}
-
-	/// <summary>
-	/// Gibt den Schwellwert für das Halftone 4x4 Dithering-Muster zurück.
-	/// </summary>
-	static float GetHalftone4x4Threshold(int x, int y) {
-		int v = Halftone4x4[y & 3, x & 3];
-		return (float) ((v + 0.5) / 16.0 * 255.0);
-	}
 
 	/// <summary>
 	/// Berechnet die wahrgenommene Helligkeit einer Farbe.

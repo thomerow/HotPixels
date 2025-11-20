@@ -4,7 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-partial class Program {
+namespace MyEscPosTest;
+
+/// <summary>
+/// Fehlerdiffusions-Kernel für verschiedene Dithering-Methoden
+/// </summary>
+sealed class DitherKernel {
 
 	/// <summary>
 	/// Floyd-Steinberg Dithering Kernel
@@ -15,7 +20,7 @@ partial class Program {
 	/// <param name="y">Die aktuelle y-Position.</param>
 	/// <param name="x">Die aktuelle x-Position.</param>
 	/// <param name="err">Der Quantisierungsfehler.</param>
-	private static void Kernel_FloydSteinberg(float[,] grayData, int w, int h, int y, int x, float err) {
+	public static void FloydSteinberg(float[,] grayData, int w, int h, int y, int x, float err) {
 		if (x + 1 < w) grayData[x + 1, y] += err * 7 / 16;
 		if (x - 1 >= 0 && y + 1 < h) grayData[x - 1, y + 1] += err * 3 / 16;
 		if (y + 1 < h) grayData[x, y + 1] += err * 5 / 16;
@@ -25,7 +30,7 @@ partial class Program {
 	/// <summary>
 	/// Jarvis, Judice, and Ninke Dithering Kernel (weit, weich)
 	/// </summary>
-	private static void Kernel_Jarvis(float[,] grayData, int w, int h, int y, int x, float err) {
+	public static void Jarvis(float[,] grayData, int w, int h, int y, int x, float err) {
 		// Zeile y
 		if (x + 1 < w) grayData[x + 1, y] += err * 7f / 48f;
 		if (x + 2 < w) grayData[x + 2, y] += err * 5f / 48f;
@@ -56,7 +61,7 @@ partial class Program {
 	/// <summary>
 	/// Stucki Dithering Kernel
 	/// </summary>
-	private static void Kernel_Stucki(float[,] grayData, int w, int h, int y, int x, float err) {
+	public static void Stucki(float[,] grayData, int w, int h, int y, int x, float err) {
 		// y
 		if (x + 1 < w) grayData[x + 1, y] += err * 8f / 42f;
 		if (x + 2 < w) grayData[x + 2, y] += err * 4f / 42f;
@@ -87,7 +92,7 @@ partial class Program {
 	/// <summary>
 	/// Burkes Dithering Kernel
 	/// </summary>
-	private static void Kernel_Burkes(float[,] grayData, int w, int h, int y, int x, float err) {
+	public static void Burkes(float[,] grayData, int w, int h, int y, int x, float err) {
 		// y
 		if (x + 1 < w) grayData[x + 1, y] += err * 8f / 32f;
 		if (x + 2 < w) grayData[x + 2, y] += err * 4f / 32f;
@@ -105,7 +110,7 @@ partial class Program {
 	/// <summary>
 	/// Sierra Lite Dithering Kernel
 	/// </summary>
-	private static void Kernel_SierraLite(float[,] grayData, int w, int h, int y, int x, float err) {
+	public static void SierraLite(float[,] grayData, int w, int h, int y, int x, float err) {
 		// y
 		if (x + 1 < w) grayData[x + 1, y] += err * 2f / 4f;
 
@@ -119,7 +124,7 @@ partial class Program {
 	/// <summary>
 	/// Atkinson Dithering Kernel
 	/// </summary>
-	private static void Kernel_Atkinson(float[,] grayData, int w, int h, int y, int x, float err) {
+	public static void Atkinson(float[,] grayData, int w, int h, int y, int x, float err) {
 		// y
 		if (x + 1 < w) grayData[x + 1, y] += err / 8f;
 		if (x + 2 < w) grayData[x + 2, y] += err / 8f;
