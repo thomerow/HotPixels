@@ -2,6 +2,8 @@ using System;
 using System.Runtime.InteropServices;
 using System.Text;
 
+namespace HotPixels.Printing;
+
 /// <summary>
 /// Hilfsklasse zum Senden von Rohdaten an einen Drucker unter Windows.
 /// </summary>

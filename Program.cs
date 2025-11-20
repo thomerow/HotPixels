@@ -2,9 +2,10 @@
 using System.Text;
 using System.Drawing;
 using HotPixels.Imaging.Dithering;
+using HotPixels.Printing;
 using System.Globalization;
 
-partial class Program {
+class Program {
 
 	private const string PrinterName = "EM5820";  // TODO: Druckernamen per Kommandzeilenargument übergeben oder alle druckbaren Geräte auflisten und auswählbar machen
 	private const double DefaultGamma = 0.75;
