@@ -4,6 +4,9 @@ using System.Drawing;
 
 class Program
 {
+    private const double DefaultGamma = 0.75;
+    private static double s_gamma = DefaultGamma;
+
     static void Main(string[] args)
     {
         string printerName = "EM5820"; // oder der Name, den du vergeben hast
@@ -18,6 +21,13 @@ class Program
         string imagePath = args[0];
         // Absoluter Pfad zum Bild
         imagePath = System.IO.Path.GetFullPath(imagePath);
+
+        // Wenn ein zweites Argument übergeben wurde, als Gamma-Wert nutzen (parsen mit neutraler Kultur)
+        if (args.Length >= 2 && double.TryParse(args[1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double gamma))
+        {
+            if (gamma <= 0) Console.WriteLine("Der Gamma-Wert muss größer als 0 sein. Standardwert wird genutzt.");
+            else s_gamma = gamma;
+        } 
 
         using Bitmap bitmap = new(imagePath);
 
@@ -57,7 +67,7 @@ class Program
         {
             for (int x = 0; x < resized.Width; ++x)
             {
-                grayData[x, y] = GetPercievedBrightness(resized.GetPixel(x, y));
+                grayData[x, y] = GetPercievedBrightness(resized.GetPixel(x, y), s_gamma);
             }
         }
 
@@ -109,8 +119,13 @@ class Program
     /// <summary>
     /// Berechnet die wahrgenommene Helligkeit einer Farbe.
     /// </summary>
-    static byte GetPercievedBrightness(Color color)
+    /// <param name="color">Die Farbe.</param>
+    /// <param name="gamma">Der Gamma-Korrekturfaktor. Standard ist 0.8. Höhere Werte machen das Bild dunkler.</param>
+    /// <returns>Die wahrgenommene Helligkeit als Byte-Wert (0-255).</returns>
+    static byte GetPercievedBrightness(Color color, double gamma = DefaultGamma)
     {
-        return (byte)((color.R * 299 + color.G * 587 + color.B * 114) / 1000);
+        double brightness = color.R * 0.299 + color.G * 0.587 + color.B * 0.114;
+        brightness = Math.Pow(brightness / 255.0, gamma) * 255.0;
+        return (byte)brightness;
     }
 }
