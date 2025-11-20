@@ -4,7 +4,7 @@ using System.Drawing;
 using MyEscPosTest.Enums;
 using System.Globalization;
 
-class Program {
+partial class Program {
 
 	private const double DefaultGamma = 0.75;
 	private const int WidthDots = 384; // Maximale Druckerbreite in Dots
@@ -122,149 +122,107 @@ class Program {
 	/// <param name="imageData">Das Array, in das die 1-Bit Bilddaten geschrieben werden.</param>
 	private static void Dither(float[,] grayData, Size size, byte[] imageData) {
 		int index = 0, w = size.Width, h = size.Height;
+		float oldValue, threshold, newValue, err;
+		Action<float[,], int, int, int, int, float> ditherKernel = null;
+		Func<int, int, float> getThreshold = null;
 
-		Action<float[,], int, int, int, int, float> ditherKernel = s_ditherMode switch {
-			DitherMode.FloydSteinberg => Kernel_FloydSteinberg,
-			DitherMode.Jarvis => Kernel_Jarvis,
-			DitherMode.Stucki => Kernel_Stucki,
-			DitherMode.Burkes => Kernel_Burkes,
-			DitherMode.SierraLite => Kernel_SierraLite,
-			DitherMode.Atkinson => Kernel_Atkinson,
-			_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
-		};
+		if (!s_ditherMode.IsOrderedDither()) {
+			ditherKernel = s_ditherMode switch {
+				DitherMode.FloydSteinberg => Kernel_FloydSteinberg,
+				DitherMode.Jarvis => Kernel_Jarvis,
+				DitherMode.Stucki => Kernel_Stucki,
+				DitherMode.Burkes => Kernel_Burkes,
+				DitherMode.SierraLite => Kernel_SierraLite,
+				DitherMode.Atkinson => Kernel_Atkinson,
+				_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
+			};
+		}
+		else {
+			getThreshold = s_ditherMode switch {
+				DitherMode.Bayer2x2 => GetBayer2x2Threshold,
+				DitherMode.Bayer4x4 => GetBayer4x4Threshold,
+				DitherMode.Bayer8x8 => GetBayer8x8Threshold,
+				DitherMode.Halftone4x4 => GetHalftone4x4Threshold,
+				_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
+			};
+		}
 
 		for (int y = 0; y < h; ++y) {
 			for (int bx = 0; bx < BytesPerRow; ++bx) {
 				byte b = 0;
 				for (int bit = 0; bit < 8; ++bit) {
 					int x = bx * 8 + bit;
-					float oldValue = grayData[x, y];
-					float newValue = (oldValue < 128) ? 0 : 255;
+					oldValue = grayData[x, y];
 
-					if (newValue == 0) b |= (byte) (0x80 >> bit); // Bit setzen
-
-					float err = oldValue - newValue; // Quantisierungsfehler
-
-					ditherKernel.Invoke(grayData, w, h, y, x, err);
+					if (ditherKernel != null) {
+						// Fehlerverteilungskernel anwenden
+						newValue = (oldValue < 128) ? 0 : 255;
+						if (newValue == 0) b |= (byte) (0x80 >> bit); // Bit setzen
+						err = oldValue - newValue; // Quantisierungsfehler
+						ditherKernel.Invoke(grayData, w, h, y, x, err);
+					}
+					else {
+						// Bei geordnetem Dithering wird kein Fehler verteilt
+						threshold = getThreshold(x, y);
+						newValue = (oldValue < threshold) ? 0 : 255;
+					}
 				}
 				imageData[index++] = b;
 			}
 		}
 	}
 
-	#region Dithering Kernels
-
-	private static void Kernel_FloydSteinberg(float[,] grayData, int w, int h, int y, int x, float err) {
-		if (x + 1 < w) grayData[x + 1, y] += err * 7 / 16;
-		if (x - 1 >= 0 && y + 1 < h) grayData[x - 1, y + 1] += err * 3 / 16;
-		if (y + 1 < h) grayData[x, y + 1] += err * 5 / 16;
-		if (x + 1 < w && y + 1 < h) grayData[x + 1, y + 1] += err * 1 / 16;
-	}
-
-	private static void Kernel_Jarvis(float[,] grayData, int w, int h, int y, int x, float err) {
-		// Zeile y
-		if (x + 1 < w) grayData[x + 1, y] += err * 7f / 48f;
-		if (x + 2 < w) grayData[x + 2, y] += err * 5f / 48f;
-
-		// Zeile y+1
-		if (y + 1 < h) {
-			if (x - 2 >= 0) grayData[x - 2, y + 1] += err * 3f / 48f;
-			if (x - 1 >= 0) grayData[x - 1, y + 1] += err * 5f / 48f;
-
-			grayData[x, y + 1] += err * 7f / 48f;
-
-			if (x + 1 < w) grayData[x + 1, y + 1] += err * 5f / 48f;
-			if (x + 2 < w) grayData[x + 2, y + 1] += err * 3f / 48f;
-		}
-
-		// Zeile y+2
-		if (y + 2 < h) {
-			if (x - 2 >= 0) grayData[x - 2, y + 2] += err * 1f / 48f;
-			if (x - 1 >= 0) grayData[x - 1, y + 2] += err * 3f / 48f;
-
-			grayData[x, y + 2] += err * 5f / 48f;
-
-			if (x + 1 < w) grayData[x + 1, y + 2] += err * 3f / 48f;
-			if (x + 2 < w) grayData[x + 2, y + 2] += err * 1f / 48f;
-		}
-	}
-
-	private static void Kernel_Stucki(float[,] grayData, int w, int h, int y, int x, float err) {
-		// y
-		if (x + 1 < w) grayData[x + 1, y] += err * 8f / 42f;
-		if (x + 2 < w) grayData[x + 2, y] += err * 4f / 42f;
-
-		// y + 1
-		if (y + 1 < h) {
-			if (x - 2 >= 0) grayData[x - 2, y + 1] += err * 2f / 42f;
-			if (x - 1 >= 0) grayData[x - 1, y + 1] += err * 4f / 42f;
-
-			grayData[x, y + 1] += err * 8f / 42f;
-
-			if (x + 1 < w) grayData[x + 1, y + 1] += err * 4f / 42f;
-			if (x + 2 < w) grayData[x + 2, y + 1] += err * 2f / 42f;
-		}
-
-		// y + 2
-		if (y + 2 < h) {
-			if (x - 2 >= 0) grayData[x - 2, y + 2] += err * 1f / 42f;
-			if (x - 1 >= 0) grayData[x - 1, y + 2] += err * 2f / 42f;
-
-			grayData[x, y + 2] += err * 4f / 42f;
-
-			if (x + 1 < w) grayData[x + 1, y + 2] += err * 2f / 42f;
-			if (x + 2 < w) grayData[x + 2, y + 2] += err * 1f / 42f;
-		}
-	}
-
-	private static void Kernel_Burkes(float[,] grayData, int w, int h, int y, int x, float err) {
-		// y
-		if (x + 1 < w) grayData[x + 1, y] += err * 8f / 32f;
-		if (x + 2 < w) grayData[x + 2, y] += err * 4f / 32f;
-
-		// y + 1
-		if (y + 1 < h) {
-			if (x - 2 >= 0) grayData[x - 2, y + 1] += err * 2f / 32f;
-			if (x - 1 >= 0) grayData[x - 1, y + 1] += err * 4f / 32f;
-			grayData[x, y + 1] += err * 8f / 32f;
-			if (x + 1 < w) grayData[x + 1, y + 1] += err * 4f / 32f;
-			if (x + 2 < w) grayData[x + 2, y + 1] += err * 2f / 32f;
-		}
-	}
-
-	private static void Kernel_SierraLite(float[,] grayData, int w, int h, int y, int x, float err) {
-		// y
-		if (x + 1 < w) grayData[x + 1, y] += err * 2f / 4f;
-
-		// y+1
-		if (y + 1 < h) {
-			if (x - 1 >= 0) grayData[x - 1, y + 1] += err * 1f / 4f;
-			grayData[x, y + 1] += err * 1f / 4f;
-		}
-	}
-
-	private static void Kernel_Atkinson(float[,] grayData, int w, int h, int y, int x, float err) {
-		// y
-		if (x + 1 < w) grayData[x + 1, y] += err / 8f;
-		if (x + 2 < w) grayData[x + 2, y] += err / 8f;
-
-		// y+1
-		if (y + 1 < h) {
-			if (x - 1 >= 0) grayData[x - 1, y + 1] += err / 8f;
-			grayData[x, y + 1] += err / 8f;
-			if (x + 1 < w) grayData[x + 1, y + 1] += err / 8f;
-		}
-
-		// y+2
-		if (y + 2 < h) {
-			grayData[x, y + 2] += err / 8f;
-		}
-	}
-
-	#endregion
-
-
 	#region Hilfsmethoden
+
+	static readonly int[,] Bayer2x2 = { { 0, 2 }, { 3, 1 } };
+
+	static readonly int[,] Bayer4x4 = {
+		{  0,  8,  2, 10 },
+		{ 12,  4, 14,  6 },
+		{  3, 11,  1,  9 },
+		{ 15,  7, 13,  5 }
+	};
+
+	static readonly int[,] Bayer8x8 = {
+		{  0, 32,  8, 40,  2, 34, 10, 42 },
+		{ 48, 16, 56, 24, 50, 18, 58, 26 },
+		{ 12, 44,  4, 36, 14, 46,  6, 38 },
+		{ 60, 28, 52, 20, 62, 30, 54, 22 },
+		{  3, 35, 11, 43,  1, 33,  9, 41 },
+		{ 51, 19, 59, 27, 49, 17, 57, 25 },
+		{ 15, 47,  7, 39, 13, 45,  5, 37 },
+		{ 63, 31, 55, 23, 61, 29, 53, 21 }
+	};
+
+	static readonly int[,] Halftone4x4 = {
+		{  7, 13, 11,  4 },
+		{ 12, 16, 14,  8 },
+		{ 10, 15,  6,  2 },
+		{  5,  9,  3,  1 }
+	};
+
+	static float GetBayer2x2Threshold(int x, int y) {
+		int v = Bayer2x2[y & 1, x & 1]; // y % 2, x % 2
+		// (v + 0.5) / 4 → 0..1, *255 → 0..255
+		return (float) ((v + 0.5) / 4.0 * 255.0);
+	}
+
+	static float GetBayer4x4Threshold(int x, int y) {
+		int v = Bayer4x4[y & 3, x & 3]; // y % 4, x % 4
+		// (v + 0.5) / 16 → 0..1, *255 → 0..255
+		return (float) ((v + 0.5) / 16.0 * 255.0);
+	}
+
+	static float GetBayer8x8Threshold(int x, int y) {
+		int v = Bayer8x8[y & 7, x & 7]; // y % 8, x % 8
+		// (v + 0.5) / 64 → 0..1, *255 → 0..255
+		return (float) ((v + 0.5) / 64.0 * 255.0);
+	}
+
+	static float GetHalftone4x4Threshold(int x, int y) {
+		int v = Halftone4x4[y & 3, x & 3];
+		return (float) ((v + 0.5) / 16.0 * 255.0);
+	}
 
 	/// <summary>
 	/// Berechnet die wahrgenommene Helligkeit einer Farbe.
@@ -279,4 +237,12 @@ class Program {
 	}
 
 	#endregion
+}
+
+internal static class Extensions {
+
+	/// <summary>
+	/// Gibt zurück, ob der Dither-Modus ein geordneter Dither-Modus ist.
+	/// </summary>
+	public static bool IsOrderedDither(this DitherMode mode) => mode >= DitherMode.Bayer2x2;
 }

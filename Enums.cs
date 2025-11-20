@@ -16,4 +16,8 @@ enum DitherMode {
 	Burkes,
 	SierraLite,
 	Atkinson,
+	Bayer2x2,
+	Bayer4x4,
+	Bayer8x8,
+	Halftone4x4,
 }
