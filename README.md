@@ -1,37 +1,43 @@
 # HotPixels
 
-**HotPixels** is a simple command-line tool for Microsoft Windows that converts images into ESC/POS raster graphics for thermal printers.
+**HotPixels** is a small Windows command‑line tool that converts images into ESC/POS raster graphics and prints them on a thermal printer.  
 It supports multiple dithering algorithms and optional gamma correction to fine‑tune brightness and contrast.
 
 ---
 
 ## Features
 
-- Converts input images to ESC/POS **raster format** (`GS v 0`)
-- Supports many **dither modes** (error diffusion & ordered dithering)
-- Optional **gamma correction** for printer-specific brightness control
-- Automatically rotates landscape images to portrait so they fit better on receipt paper
+- Converts images to ESC/POS **raster format** (`GS v 0`)
+- Multiple **dithering modes** (error‑diffusion + ordered dithers)
+- Optional **gamma correction**
+- Automatically rotates landscape images to portrait
+- Prints directly to any installed Windows ESC/POS printer
 
 ---
 
 ## Usage
 
 ```
-HotPixels <imagePath> [ditherModeIndex] [gamma]
+HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
 ```
 
 ### Arguments
 
 - **imagePath**  
-  The path to the image you want to print.
+  Path to the image file.
+
+- **printerName**  
+  Name of the installed ESC/POS printer.  
+  Use quotes if the name contains spaces.
 
 - **ditherModeIndex** (optional, 1‑based integer)  
-  Selects a dither algorithm.  
-  Run `HotPixels` with no arguments to list all modes.
+  Selects a dithering algorithm.  
+  Run the program without arguments to list all modes.
 
 - **gamma** (optional, float > 0)  
   Adjusts perceived brightness.  
-  Lower values → brighter output.
+  Lower = brighter output.  
+  Default: **0.75**
 
 ---
 
@@ -39,28 +45,29 @@ HotPixels <imagePath> [ditherModeIndex] [gamma]
 
 ### Print using default settings
 ```
-HotPixels input.png
+HotPixels image.png "EM5820"
 ```
 
-### Print using a specific dithering mode
+### Print with a specific dither mode
 ```
-HotPixels input.jpg 3
+HotPixels photo.jpg "My Thermal Printer" 3
 ```
 
-### Print with dithering mode + custom gamma
+### Print with dither mode + custom gamma
 ```
-HotPixels image.bmp 2 0.75
+HotPixels logo.bmp "ESC POS USB" 2 0.6
 ```
 
 ---
 
 ## Requirements
 
+- Windows  
 - .NET 8 or newer  
-- An ESC/POS‑compatible thermal printer
+- An ESC/POS‑compatible thermal printer installed in the system
 
 ---
 
 ## License
 
-MIT 
+MIT (or your chosen license)
