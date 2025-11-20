@@ -10,7 +10,7 @@ It supports multiple dithering algorithms and optional gamma correction to fineâ
 - Converts input images to ESC/POS **raster format** (`GS v 0`)
 - Supports many **dither modes** (error diffusion & ordered dithering)
 - Optional **gamma correction** for printer-specific brightness control
-- Automatically rotates landscape images to portrait
+- Automatically rotates landscape images to portrait so they fit better on receipt paper
 
 ---
 
