@@ -7,19 +7,19 @@ using System.Threading.Tasks;
 namespace HotPixels.Imaging.Dithering;
 
 /// <summary>
-/// Fehlerdiffusions-Kernel für verschiedene Dithering-Methoden
+/// Error-diffusion kernels for various dithering algorithms.
 /// </summary>
 sealed class DitherKernel {
 
 	/// <summary>
-	/// Floyd-Steinberg Dithering Kernel
+	/// Floyd–Steinberg dithering kernel.
 	/// </summary>
-	/// <param name="grayData">Das Graustufenbild als 2D-Array.</param>
-	/// <param name="w">Die Breite des Bildes.</param>
-	/// <param name="h">Die Höhe des Bildes.</param>
-	/// <param name="y">Die aktuelle y-Position.</param>
-	/// <param name="x">Die aktuelle x-Position.</param>
-	/// <param name="err">Der Quantisierungsfehler.</param>
+	/// <param name="grayData">The grayscale image as a 2D array.</param>
+	/// <param name="w">Image width.</param>
+	/// <param name="h">Image height.</param>
+	/// <param name="y">Current y position.</param>
+	/// <param name="x">Current x position.</param>
+	/// <param name="err">The quantization error.</param>
 	public static void FloydSteinberg(float[,] grayData, int w, int h, int y, int x, float err) {
 		if (x + 1 < w) grayData[x + 1, y] += err * 7 / 16;
 		if (x - 1 >= 0 && y + 1 < h) grayData[x - 1, y + 1] += err * 3 / 16;
@@ -28,14 +28,14 @@ sealed class DitherKernel {
 	}
 
 	/// <summary>
-	/// Jarvis, Judice, and Ninke Dithering Kernel (weit, weich)
+	/// Jarvis, Judice, and Ninke dithering kernel (wide, smooth).
 	/// </summary>
 	public static void Jarvis(float[,] grayData, int w, int h, int y, int x, float err) {
-		// Zeile y
+		// Row y
 		if (x + 1 < w) grayData[x + 1, y] += err * 7f / 48f;
 		if (x + 2 < w) grayData[x + 2, y] += err * 5f / 48f;
 
-		// Zeile y+1
+		// Row y + 1
 		if (y + 1 < h) {
 			if (x - 2 >= 0) grayData[x - 2, y + 1] += err * 3f / 48f;
 			if (x - 1 >= 0) grayData[x - 1, y + 1] += err * 5f / 48f;
@@ -46,7 +46,7 @@ sealed class DitherKernel {
 			if (x + 2 < w) grayData[x + 2, y + 1] += err * 3f / 48f;
 		}
 
-		// Zeile y+2
+		// Row y + 2
 		if (y + 2 < h) {
 			if (x - 2 >= 0) grayData[x - 2, y + 2] += err * 1f / 48f;
 			if (x - 1 >= 0) grayData[x - 1, y + 2] += err * 3f / 48f;

@@ -5,11 +5,11 @@ using System.Text;
 namespace HotPixels.Printing;
 
 /// <summary>
-/// Hilfsklasse zum Senden von Rohdaten an einen Drucker unter Windows.
+/// Helper class for sending raw ESC/POS byte data to a printer on Windows.
 /// </summary>
 public static class RawPrinter {
 
-	#region P/Invoke Deklarationen
+	#region P/Invoke Declarations
 
 	[DllImport("winspool.drv", CharSet = CharSet.Unicode, SetLastError = true)]
 	static extern bool OpenPrinter(string pPrinterName, out IntPtr phPrinter, IntPtr pDefault);
@@ -39,10 +39,10 @@ public static class RawPrinter {
 	[DllImport("winspool.drv", SetLastError = true)]
 	static extern bool WritePrinter(IntPtr hPrinter, IntPtr pBytes, int dwCount, out int dwWritten);
 
-	#endregion P/Invoke Deklarationen
+	#endregion P/Invoke Declarations
 
 	/// <summary>
-	/// Sendet ein Byte-Array als Rohdaten an den angegebenen Drucker.
+	/// Sends a byte array as raw data to the given printer.
 	/// </summary>
 	public static void SendBytes(string printerName, byte[] bytes) {
 		if (!OpenPrinter(printerName, out IntPtr hPrinter, IntPtr.Zero)) {

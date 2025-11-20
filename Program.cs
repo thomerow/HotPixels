@@ -10,111 +10,111 @@ class Program {
 
 	private static string s_printerName;
 	public const double DefaultGamma = 0.75;
-	private const int WidthDots = 384; // Maximale Druckerbreite in Dots
+	private const int WidthDots = 384; // Maximum printer width in dots
 	private const int BytesPerRow = WidthDots / 8;
 
 	private static double s_gamma = DefaultGamma;
 	private static DitherMode s_ditherMode = DitherMode.Jarvis;
 
 	/// <summary>
-	/// Der Haupteinstiegspunkt der Anwendung.
+	/// The main entry point of the application.
 	/// </summary>
 	static void Main(string[] args) {
-		// Bild-Dateiname ist im ersten Argument, optionaler Dither-Modus im zweiten Argument (als Zahl von 1 beginnend), optionaler Gamma-Wert im dritten Argument:
+		// Image file name is the first argument, optional dither mode as the second argument (as a number starting from 1), optional gamma value as the third argument:
 
-		// Keine Argumente übergeben:
+		// Too few arguments provided:
 		if (args.Length < 2) {
-			// Hinweis ausgeben, dass Bildpfad und Druckername übergeben werden müssen
-			Console.WriteLine("Bitte den Pfad zum Bild als erstes Argument und den Druckernamen als zweites Argument angeben.");
-			Console.WriteLine("Beispiel: HotPixels.exe C:\\Bilder\\testbild.png \"Mein ESC/POS Drucker\"");
+			// Output a note that image path and printer name must be provided
+			Console.WriteLine("Please specify the path to the image as the first argument and the printer name as the second argument.");
+			Console.WriteLine("Example: HotPixels.exe C:\\Images\\testimage.png \"My ESC/POS Printer\"");
 
-			// Installierte Drucker auflisten
-			Console.WriteLine("Installierte Drucker:");
+			// List installed printers
+			Console.WriteLine("Installed printers:");
 			foreach (string printerName in PrinterSettings.InstalledPrinters) {
 				Console.WriteLine($"  \"{printerName}\"");
 			}
 
-			// Mögliche Dither-Modi aus enum DitherMode automatisch auflisten
+			// List possible dither modes from enum DitherMode automatically
 			string[] ditherNames = Enum.GetNames(typeof(DitherMode));
-			Console.WriteLine("Mögliche Dither-Modi als optionales, drittes Argument (Zahlenwert von 1 beginnend, Standard ist 2 (Jarvis)):");
+			Console.WriteLine("Possible dither modes as optional third argument (numeric value starting from 1, default is 2 (Jarvis)):");
 			for (int i = 0; i < ditherNames.Length; ++i) {
 				Console.WriteLine($"  {i + 1}: {ditherNames[i]}");
 			}
 
-			// Hinweis zum Gamma-Wert ausgeben
+			// Output note about gamma value
 			Console.WriteLine(
-				"Optional kann als viertes Argument ein Gamma-Wert (Fließkommazahl größer 0) angegeben werden. " +
-				$"Standardwert ist {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (niedrigere Werte machen das Bild heller)."
+				"Optionally, a gamma value (floating point number greater than 0) can be specified as the fourth argument. " +
+				$"Default value is {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (lower values make the image brighter)."
 			);
 			return;
 		}
 
-		// Erstes Argument als Bildpfad nutzen
+		// Use first argument as image path
 		string imagePath = args[0];
-		// Absoluten Pfad ermitteln
+		// Get absolute path
 		imagePath = Path.GetFullPath(imagePath);
 
-		// Zweites Argument als Druckername nutzen (ESC/POS fähiger Drucker, muss in Anführungszeichen stehen, wenn Leerzeichen im Namen sind)
+		// Use second argument as printer name (ESC/POS capable printer, must be in quotes if name contains spaces)
 		s_printerName = args[1];
-		// Grobe verifizierung, ob der Druckername leer ist
+		// Rough verification if printer name is empty
 		if (string.IsNullOrWhiteSpace(s_printerName)) {
-			Console.WriteLine("Ungültiger Druckername angegeben.");
+			Console.WriteLine("Invalid printer name specified.");
 			return;
 		}
 
-		// Drittes Argument als Dither-Modus nutzen (1-basiert)
+		// Use third argument as dither mode (1-based)
 		if (args.Length >= 3 && int.TryParse(args[2], out int ditherModeIndex)) {
 			if (ditherModeIndex < 1 || ditherModeIndex > Enum.GetValues<DitherMode>().Length) {
-				Console.WriteLine($"Ungültiger Dither-Modus Index. Standardwert {s_ditherMode} wird genutzt.");
+				Console.WriteLine($"Invalid dither mode index. Default value {s_ditherMode} will be used.");
 			}
 			else {
 				s_ditherMode = (DitherMode) ditherModeIndex;
-				Console.WriteLine($"Dither-Modus gesetzt auf {s_ditherMode}.");
+				Console.WriteLine($"Dither mode set to {s_ditherMode}.");
 			}
 		}
 
-		// Wenn ein viertes Argument übergeben wurde, als Gamma-Wert nutzen (parsen mit neutraler Kultur)
+		// If a fourth argument is provided, use as gamma value (parse with invariant culture)
 		if (args.Length >= 4 && double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out double gamma)) {
-			if (gamma <= 0) Console.WriteLine($"Der Gamma-Wert muss größer als 0 sein. Standardwert {s_gamma.ToString(CultureInfo.InvariantCulture)} wird genutzt.");
+			if (gamma <= 0) Console.WriteLine($"Gamma value must be greater than 0. Default value {s_gamma.ToString(CultureInfo.InvariantCulture)} will be used.");
 			else s_gamma = gamma;
 		}
 
-		// Bild laden
+		// Load image
 		using Bitmap bitmap = new(imagePath);
 
-		// Bild um 90° drehen, falls es breiter als hoch ist
+		// Rotate image by 90° if it is wider than tall
 		if (bitmap.Width > bitmap.Height) {
 			bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
 		}
 
-		// ESC/POS Rasterbild erstellen
+		// Create ESC/POS raster image
 		byte[] escposImage = CreateEscPosRasterImage(bitmap);
 
-		// An Drucker senden
+		// Send to printer
 		RawPrinter.SendBytes(s_printerName, escposImage);
 
-		// Vier Zeilenumbrüche senden, damit man die Ausgabe sieht und das Papier abreißen kann
+		// Send four line feeds so the output is visible and the paper can be torn off
 		byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
 		RawPrinter.SendBytes(s_printerName, lineFeeds);
 	}
 
 	/// <summary>
-	/// Erstellt ein ESC/POS Rasterbild im GS v 0 Format aus einem Bitmap. 
+	/// Creates an ESC/POS raster image in GS v 0 format from a bitmap.
 	/// </summary>
 	static byte[] CreateEscPosRasterImage(Bitmap input) {
-		// Skalierungsfaktor aus Breite des eingabe-Bildes und der maximalen Druckerbreite (384 Dots) berechnen
+		// Calculate scaling factor from input image width and maximum printer width (384 dots)
 		float scaleFactor = 384.0f / input.Width;
 
-		// Höhe des skalierten Bildes berechnen
+		// Calculate height of scaled image
 		int scaledHeight = (int) Math.Round(input.Height * scaleFactor);
 
-		// Skalierte Kopie des Eingabebildes erstellen
+		// Create scaled copy of input image
 		using Bitmap resized = new(input, new Size(384, scaledHeight));
 
 		int dataLen = BytesPerRow * scaledHeight;
 		byte[] imageData = new byte[dataLen];
 
-		// Graustufenwerte des skalierten Bildes berechnen
+		// Calculate grayscale values of scaled image
 		float[,] grayData = new float[resized.Width, resized.Height];
 		for (int y = 0; y < resized.Height; ++y) {
 			for (int x = 0; x < resized.Width; ++x) {
@@ -122,37 +122,37 @@ class Program {
 			}
 		}
 
-		// Bilddaten vorbereiten und per ausgewähltem Dithering in 1-Bit umwandeln
+		// Prepare image data and convert to 1-bit using selected dithering
 		Dither(grayData, resized.Size, imageData);
 
-		// ESC/POS datenarray vorbereiten (10 Byte Header + Bilddaten)
+		// Prepare ESC/POS data array (10 byte header + image data)
 		byte[] result = new byte[10 + dataLen];
 
 		// Header
 		byte[] escposImageHeader = [
-			0x1B, 0x40,             // ESC @ (Initialisieren)
+			0x1B, 0x40,             // ESC @ (Initialize)
 
 			0x1D, 0x76, 0x30, 0x00, // GS 'v' '0' m  (m = 0: normal)
-			BytesPerRow, 0,			// xL, xH (Breite in Bytes)
+			BytesPerRow, 0,			// xL, xH (width in bytes)
 			(byte)(scaledHeight & 0xFF),        // yL
 			(byte)((scaledHeight >> 8) & 0xFF), // yH
 		];
 
-		// Header kopieren
+		// Copy header
 		Buffer.BlockCopy(escposImageHeader, 0, result, 0, escposImageHeader.Length);
 
-		// Bilddaten kopieren
+		// Copy image data
 		Buffer.BlockCopy(imageData, 0, result, escposImageHeader.Length, imageData.Length);
 
 		return result;
 	}
 
 	/// <summary>
-	/// Wendet Dithering auf die Graustufenbilddaten an und schreibt die 1-Bit Bilddaten in das übergebene Array.
+	/// Applies dithering to the grayscale image data and writes the 1-bit image data to the provided array.
 	/// </summary>
-	/// <param name="grayData">Das Graustufenbild als 2D-Array.</param>
-	/// <param name="size">Die Größe des Bildes.</param>
-	/// <param name="imageData">Das Array, in das die 1-Bit Bilddaten geschrieben werden.</param>
+	/// <param name="grayData">The grayscale image as a 2D array.</param>
+	/// <param name="size">The size of the image.</param>
+	/// <param name="imageData">The array to which the 1-bit image data is written.</param>
 	private static void Dither(float[,] grayData, Size size, byte[] imageData) {
 		int index = 0, w = size.Width, h = size.Height;
 		float oldValue, threshold, newValue = 0, err;
@@ -167,7 +167,7 @@ class Program {
 				DitherMode.Burkes => DitherKernel.Burkes,
 				DitherMode.SierraLite => DitherKernel.SierraLite,
 				DitherMode.Atkinson => DitherKernel.Atkinson,
-				_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
+				_ => throw new NotImplementedException($"Dither mode {s_ditherMode} is not implemented."),
 			};
 		}
 		else {
@@ -176,7 +176,7 @@ class Program {
 				DitherMode.Bayer4x4 => HalftoneKernel.GetBayer4x4Threshold,
 				DitherMode.Bayer8x8 => HalftoneKernel.GetBayer8x8Threshold,
 				DitherMode.Halftone4x4 => HalftoneKernel.GetHalftone4x4Threshold,
-				_ => throw new NotImplementedException($"Dither-Modus {s_ditherMode} ist nicht implementiert."),
+				_ => throw new NotImplementedException($"Dither mode {s_ditherMode} is not implemented."),
 			};
 		}
 
@@ -185,45 +185,45 @@ class Program {
 				byte b = 0;
 				for (int bit = 0; bit < 8; ++bit) {
 					int x = bx * 8 + bit;
-					oldValue = grayData[x, y]; // Aktuellen Graustufenwert lesen
+					oldValue = grayData[x, y]; // Read current grayscale value
 
 					if (ditherKernel != null) {
-						// Fehlerverteilungskernel anwenden
+						// Apply error distribution kernel
 						newValue = (oldValue < 128) ? 0 : 255;
-						err = oldValue - newValue; // Quantisierungsfehler
+						err = oldValue - newValue; // Quantization error
 						ditherKernel(grayData, w, h, y, x, err);
 					}
 					else {
-						// Bei geordnetem Dithering wird kein Fehler verteilt
+						// No error distribution for ordered dithering
 						threshold = getThreshold(x, y);
 						newValue = (oldValue < threshold) ? 0 : 255;
 					}
 
-					// Bit setzen wenn Pixel schwarz ist
+					// Set bit if pixel is black
 					if (newValue == 0) b |= (byte) (0x80 >> bit);
 				}
-				imageData[index++] = b; // Byte in das Bilddatenarray schreiben
+				imageData[index++] = b; // Write byte to image data array
 			}
 		}
 	}
 }
 
 /// <summary>
-/// Nützliche Erweiterungsmethoden
+/// Useful extension methods
 /// </summary>
 internal static class Extensions {
 
 	/// <summary>
-	/// Gibt zurück, ob der Dither-Modus ein geordneter Dither-Modus ist.
+	/// Returns whether the dither mode is an ordered dither mode.
 	/// </summary>
 	public static bool IsOrderedDither(this DitherMode mode) => mode >= DitherMode.Bayer2x2;
 
 	/// <summary>
-	/// Berechnet die wahrgenommene Helligkeit einer Farbe.
+	/// Calculates the perceived brightness of a color.
 	/// </summary>
-	/// <param name="color">Die Farbe.</param>
-	/// <param name="gamma">Der Gamma-Korrekturfaktor. Standard ist 0.75. Höhere Werte machen das Bild dunkler.</param>
-	/// <returns>Die wahrgenommene Helligkeit als Byte-Wert (0-255).</returns>
+	/// <param name="color">The color.</param>
+	/// <param name="gamma">The gamma correction factor. Default is 0.75. Higher values make the image darker.</param>
+	/// <returns>The perceived brightness as a byte value (0-255).</returns>
 	public static byte GetPerceivedBrightness(this Color color, double gamma = Program.DefaultGamma) {
 		double brightness = color.R * 0.299 + color.G * 0.587 + color.B * 0.114;
 		brightness = Math.Pow(brightness / 255.0, gamma) * 255.0;
