@@ -29,7 +29,7 @@ partial class Program {
 			}
 			Console.WriteLine(
 				"Optional kann als drittes Argument ein Gamma-Wert (Fließkommazahl größer 0) angegeben werden. " +
-				$"Standardwert ist {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (niedrigerer Werte machen das Bild heller)."
+				$"Standardwert ist {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (niedrigere Werte machen das Bild heller)."
 			);
 			return;
 		}
