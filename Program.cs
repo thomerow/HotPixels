@@ -247,7 +247,7 @@ partial class Program {
 	/// Berechnet die wahrgenommene Helligkeit einer Farbe.
 	/// </summary>
 	/// <param name="color">Die Farbe.</param>
-	/// <param name="gamma">Der Gamma-Korrekturfaktor. Standard ist 0.8. Höhere Werte machen das Bild dunkler.</param>
+	/// <param name="gamma">Der Gamma-Korrekturfaktor. Standard ist 0.75. Höhere Werte machen das Bild dunkler.</param>
 	/// <returns>Die wahrgenommene Helligkeit als Byte-Wert (0-255).</returns>
 	static byte GetPercievedBrightness(Color color, double gamma = DefaultGamma) {
 		double brightness = color.R * 0.299 + color.G * 0.587 + color.B * 0.114;
