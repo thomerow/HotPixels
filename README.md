@@ -70,4 +70,4 @@ HotPixels logo.bmp "ESC POS USB" 2 0.6
 
 ## License
 
-MIT (or your chosen license)
+MIT
