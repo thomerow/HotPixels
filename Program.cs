@@ -168,7 +168,7 @@ partial class Program {
 
 					if (newValue == 0) b |= (byte) (0x80 >> bit); // Bit setzen
 				}
-				imageData[index++] = b;
+				imageData[index++] = b; // Byte in das Bilddatenarray schreiben
 			}
 		}
 	}
