@@ -164,7 +164,7 @@ partial class Program {
 						// Fehlerverteilungskernel anwenden
 						newValue = (oldValue < 128) ? 0 : 255;
 						err = oldValue - newValue; // Quantisierungsfehler
-						ditherKernel.Invoke(grayData, w, h, y, x, err);
+						ditherKernel(grayData, w, h, y, x, err);
 					}
 					else {
 						// Bei geordnetem Dithering wird kein Fehler verteilt
