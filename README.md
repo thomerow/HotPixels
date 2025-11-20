@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="logo.svg" alt="HotPixels logo" width="320">
+</p>
+
 # HotPixels
 
 **HotPixels** is a small Windows command‑line tool that converts images into ESC/POS raster graphics and prints them on a thermal printer.  

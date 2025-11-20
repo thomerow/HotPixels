@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="80" viewBox="0 0 320 80">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ff7a18"/>
+      <stop offset="50%" stop-color="#ff3d3d"/>
+      <stop offset="100%" stop-color="#ffb347"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="320" height="80" rx="12" ry="12" fill="#111"/>
+  <!-- pixel dots -->
+  <g transform="translate(20,22)">
+    <rect x="0" y="0" width="10" height="10" fill="#ff4d4d"/>
+    <rect x="14" y="0" width="10" height="10" fill="#ff8a3c"/>
+    <rect x="28" y="0" width="10" height="10" fill="#ffd966"/>
+
+    <rect x="7"  y="14" width="10" height="10" fill="#ff8a3c"/>
+    <rect x="21" y="14" width="10" height="10" fill="#ffd966"/>
+
+    <rect x="0"  y="28" width="10" height="10" fill="#ff8a3c"/>
+    <rect x="14" y="28" width="10" height="10" fill="#ffd966"/>
+    <rect x="28" y="28" width="10" height="10" fill="#ff4d4d"/>
+  </g>
+  <!-- text -->
+  <text x="95" y="50"
+        font-family="Segoe UI, system-ui, -apple-system, sans-serif"
+        font-size="32"
+        fill="url(#g)"
+        letter-spacing="1.5">
+    HotPixels
+  </text>
+  <text x="95" y="66"
+        font-family="Consolas, Menlo, monospace"
+        font-size="11"
+        fill="#ccc">
+    ESC/POS image dithering CLI
+  </text>
+</svg>
