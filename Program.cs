@@ -175,7 +175,8 @@ partial class Program {
 						newValue = (oldValue < threshold) ? 0 : 255;
 					}
 
-					if (newValue == 0) b |= (byte) (0x80 >> bit); // Bit setzen
+					// Bit setzen wenn Pixel schwarz ist
+					if (newValue == 0) b |= (byte) (0x80 >> bit);
 				}
 				imageData[index++] = b; // Byte in das Bilddatenarray schreiben
 			}
