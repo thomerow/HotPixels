@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Text;
 using System.Drawing;
-using MyEscPosTest.Enums;
+using HotPixels.Imaging.Dithering;
 using System.Globalization;
-using MyEscPosTest;
 
 partial class Program {
 

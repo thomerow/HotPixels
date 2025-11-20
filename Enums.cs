@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MyEscPosTest.Enums;
+namespace HotPixels.Imaging.Dithering;
 
 /// <summary>
 /// Dithering-Modi für die Bildverarbeitung
