@@ -101,8 +101,9 @@ partial class Program {
 		// Bilddaten vorbereiten und per ausgewähltem Dithering in 1-Bit umwandeln
 		Dither(grayData, resized.Size, imageData);
 
-		// ESC/POS datenarray vorbereiten
+		// ESC/POS datenarray vorbereiten (10 Byte Header + Bilddaten)
 		byte[] result = new byte[10 + dataLen];
+
 		// Header
 		byte[] escposImageHeader = [
 			0x1B, 0x40,             // ESC @ (Initialisieren)
@@ -112,8 +113,10 @@ partial class Program {
 			(byte)(scaledHeight & 0xFF),        // yL
 			(byte)((scaledHeight >> 8) & 0xFF), // yH
 		];
+
 		// Header kopieren
 		Buffer.BlockCopy(escposImageHeader, 0, result, 0, escposImageHeader.Length);
+
 		// Bilddaten kopieren
 		Buffer.BlockCopy(imageData, 0, result, escposImageHeader.Length, imageData.Length);
 
