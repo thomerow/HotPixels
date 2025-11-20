@@ -75,7 +75,7 @@ partial class Program {
 	}
 
 	/// <summary>
-	/// Erstellt ein ESC/POS Rasterbild im GS v 0 Format aus einem Bitmap. Fürs erste wird nur ein Schwellenwert von 128 genutzt.
+	/// Erstellt ein ESC/POS Rasterbild im GS v 0 Format aus einem Bitmap. 
 	/// </summary>
 	static byte[] CreateEscPosRasterImage(Bitmap input) {
 		// Skalierungsfaktor aus Breite des eingabe-Bildes und der maximalen Druckerbreite (384 Dots) berechnen
@@ -121,7 +121,7 @@ partial class Program {
 	}
 
 	/// <summary>
-	/// Wendet Dithering auf die Graustufenbilddaten an und schreibt die 1-Bit Bilddaten in das imageData Array.
+	/// Wendet Dithering auf die Graustufenbilddaten an und schreibt die 1-Bit Bilddaten in das übergebene Array.
 	/// </summary>
 	/// <param name="grayData">Das Graustufenbild als 2D-Array.</param>
 	/// <param name="size">Die Größe des Bildes.</param>
