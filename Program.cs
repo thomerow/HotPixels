@@ -8,11 +8,11 @@ using System.Drawing.Printing;
 
 class Program {
 
-	private static string s_printerName;
 	public const double DefaultGamma = 0.75;
 	private const int WidthDots = 384; // Maximum printer width in dots
 	private const int BytesPerRow = WidthDots / 8;
 
+	private static string s_printerName;
 	private static double s_gamma = DefaultGamma;
 	private static DitherMode s_ditherMode = DitherMode.Jarvis;
 
