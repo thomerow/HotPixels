@@ -15,6 +15,9 @@ class Program {
 	private static double s_gamma = DefaultGamma;
 	private static DitherMode s_ditherMode = DitherMode.Jarvis;
 
+	/// <summary>
+	/// Der Haupteinstiegspunkt der Anwendung.
+	/// </summary>
 	static void Main(string[] args) {
 		// Bild-Dateiname ist im ersten Argument, optionaler Dither-Modus im zweiten Argument (als Zahl von 1 beginnend), optionaler Gamma-Wert im dritten Argument:
 
