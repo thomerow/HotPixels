@@ -55,7 +55,13 @@ partial class Program {
 			else s_gamma = gamma;
 		}
 
+		// Bild laden
 		using Bitmap bitmap = new(imagePath);
+
+		// Bild um 90° drehen, falls es breiter als hoch ist
+		if (bitmap.Width > bitmap.Height) {
+			bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
+		}
 
 		// ESC/POS Rasterbild erstellen
 		byte[] escposImage = CreateEscPosRasterImage(bitmap);
