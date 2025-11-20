@@ -4,10 +4,11 @@ using System.Drawing;
 using HotPixels.Imaging.Dithering;
 using HotPixels.Printing;
 using System.Globalization;
+using System.Drawing.Printing;
 
 class Program {
 
-	private const string PrinterName = "EM5820";  // TODO: Druckernamen per Kommandzeilenargument übergeben oder alle druckbaren Geräte auflisten und auswählbar machen
+	private static string s_printerName;
 	public const double DefaultGamma = 0.75;
 	private const int WidthDots = 384; // Maximale Druckerbreite in Dots
 	private const int BytesPerRow = WidthDots / 8;
@@ -22,27 +23,47 @@ class Program {
 		// Bild-Dateiname ist im ersten Argument, optionaler Dither-Modus im zweiten Argument (als Zahl von 1 beginnend), optionaler Gamma-Wert im dritten Argument:
 
 		// Keine Argumente übergeben:
-		if (args.Length < 1) {
-			Console.WriteLine("Bitte den Pfad zum Bild als erstes Argument angeben.");
+		if (args.Length < 2) {
+			// Hinweis ausgeben, dass Bildpfad und Druckername übergeben werden müssen
+			Console.WriteLine("Bitte den Pfad zum Bild als erstes Argument und den Druckernamen als zweites Argument angeben.");
+			Console.WriteLine("Beispiel: HotPixels.exe C:\\Bilder\\testbild.png \"Mein ESC/POS Drucker\"");
+
+			// Installierte Drucker auflisten
+			Console.WriteLine("Installierte Drucker:");
+			foreach (string printerName in PrinterSettings.InstalledPrinters) {
+				Console.WriteLine($"  \"{printerName}\"");
+			}
+
 			// Mögliche Dither-Modi aus enum DitherMode automatisch auflisten
 			string[] ditherNames = Enum.GetNames(typeof(DitherMode));
-			Console.WriteLine("Mögliche Dither-Modi als optionales, zweites Argument (Zahlenwert von 1 beginnend, Standard ist 2 (Jarvis)):");
+			Console.WriteLine("Mögliche Dither-Modi als optionales, drittes Argument (Zahlenwert von 1 beginnend, Standard ist 2 (Jarvis)):");
 			for (int i = 0; i < ditherNames.Length; ++i) {
 				Console.WriteLine($"  {i + 1}: {ditherNames[i]}");
 			}
+
+			// Hinweis zum Gamma-Wert ausgeben
 			Console.WriteLine(
-				"Optional kann als drittes Argument ein Gamma-Wert (Fließkommazahl größer 0) angegeben werden. " +
+				"Optional kann als viertes Argument ein Gamma-Wert (Fließkommazahl größer 0) angegeben werden. " +
 				$"Standardwert ist {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (niedrigere Werte machen das Bild heller)."
 			);
 			return;
 		}
 
+		// Erstes Argument als Bildpfad nutzen
 		string imagePath = args[0];
-		// Absoluter Pfad zum Bild
-		imagePath = System.IO.Path.GetFullPath(imagePath);
+		// Absoluten Pfad ermitteln
+		imagePath = Path.GetFullPath(imagePath);
 
-		// Zweiten Argument als Dither-Modus nutzen (1-basiert)
-		if (args.Length >= 2 && int.TryParse(args[1], out int ditherModeIndex)) {
+		// Zweites Argument als Druckername nutzen (ESC/POS fähiger Drucker, muss in Anführungszeichen stehen, wenn Leerzeichen im Namen sind)
+		s_printerName = args[1];
+		// Grobe verifizierung, ob der Druckername leer ist
+		if (string.IsNullOrWhiteSpace(s_printerName)) {
+			Console.WriteLine("Ungültiger Druckername angegeben.");
+			return;
+		}
+
+		// Drittes Argument als Dither-Modus nutzen (1-basiert)
+		if (args.Length >= 3 && int.TryParse(args[2], out int ditherModeIndex)) {
 			if (ditherModeIndex < 1 || ditherModeIndex > Enum.GetValues<DitherMode>().Length) {
 				Console.WriteLine($"Ungültiger Dither-Modus Index. Standardwert {s_ditherMode} wird genutzt.");
 			}
@@ -52,8 +73,8 @@ class Program {
 			}
 		}
 
-		// Wenn ein drittes Argument übergeben wurde, als Gamma-Wert nutzen (parsen mit neutraler Kultur)
-		if (args.Length >= 3 && double.TryParse(args[2], NumberStyles.Float, CultureInfo.InvariantCulture, out double gamma)) {
+		// Wenn ein viertes Argument übergeben wurde, als Gamma-Wert nutzen (parsen mit neutraler Kultur)
+		if (args.Length >= 4 && double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out double gamma)) {
 			if (gamma <= 0) Console.WriteLine($"Der Gamma-Wert muss größer als 0 sein. Standardwert {s_gamma.ToString(CultureInfo.InvariantCulture)} wird genutzt.");
 			else s_gamma = gamma;
 		}
@@ -70,11 +91,11 @@ class Program {
 		byte[] escposImage = CreateEscPosRasterImage(bitmap);
 
 		// An Drucker senden
-		RawPrinter.SendBytes(PrinterName, escposImage);
+		RawPrinter.SendBytes(s_printerName, escposImage);
 
 		// Vier Zeilenumbrüche senden, damit man die Ausgabe sieht und das Papier abreißen kann
 		byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
-		RawPrinter.SendBytes(PrinterName, lineFeeds);
+		RawPrinter.SendBytes(s_printerName, lineFeeds);
 	}
 
 	/// <summary>

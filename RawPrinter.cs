@@ -46,7 +46,7 @@ public static class RawPrinter {
 	/// </summary>
 	public static void SendBytes(string printerName, byte[] bytes) {
 		if (!OpenPrinter(printerName, out IntPtr hPrinter, IntPtr.Zero)) {
-			throw new InvalidOperationException("OpenPrinter failed.");
+			throw new InvalidOperationException($"OpenPrinter failed with printer name '{printerName}'.");
 		}
 
 		try {
