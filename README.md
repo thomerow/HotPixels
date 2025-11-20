@@ -4,8 +4,6 @@
 
 # HotPixels
 
-![Build](https://github.com/yourname/HotPixels/actions/workflows/build.yml/badge.svg)
-
 **HotPixels** is a small Windows command‑line tool that converts images into ESC/POS raster graphics and prints them on a thermal printer.  
 It supports multiple dithering algorithms and optional gamma correction to fine‑tune brightness and contrast.
 
