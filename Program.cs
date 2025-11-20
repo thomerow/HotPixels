@@ -14,9 +14,9 @@ partial class Program {
 	private static DitherMode s_ditherMode = DitherMode.Jarvis;
 
 	static void Main(string[] args) {
-		string printerName = "EM5820"; // oder der Name, den du vergeben hast
+		string printerName = "EM5820";
 
-		// Beispiel bild dateiname ist im ersten Argument, optionaler Dither-Modus im zweiten Argument (als Zahl von 1 beginnend), optionaler Gamma-Wert im dritten Argument:
+		// Bild-Dateiname ist im ersten Argument, optionaler Dither-Modus im zweiten Argument (als Zahl von 1 beginnend), optionaler Gamma-Wert im dritten Argument:
 
 		// Keine Argumente übergeben:
 		if (args.Length < 1) {
