@@ -8,7 +8,7 @@ using System.Globalization;
 class Program {
 
 	private const string PrinterName = "EM5820";  // TODO: Druckernamen per Kommandzeilenargument übergeben oder alle druckbaren Geräte auflisten und auswählbar machen
-	private const double DefaultGamma = 0.75;
+	public const double DefaultGamma = 0.75;
 	private const int WidthDots = 384; // Maximale Druckerbreite in Dots
 	private const int BytesPerRow = WidthDots / 8;
 
@@ -94,7 +94,7 @@ class Program {
 		float[,] grayData = new float[resized.Width, resized.Height];
 		for (int y = 0; y < resized.Height; ++y) {
 			for (int x = 0; x < resized.Width; ++x) {
-				grayData[x, y] = GetPercievedBrightness(resized.GetPixel(x, y), s_gamma);
+				grayData[x, y] = resized.GetPixel(x, y).GetPerceivedBrightness(s_gamma);
 			}
 		}
 
@@ -182,8 +182,17 @@ class Program {
 			}
 		}
 	}
+}
 
-	#region Hilfsmethoden
+/// <summary>
+/// Nützliche Erweiterungsmethoden
+/// </summary>
+internal static class Extensions {
+
+	/// <summary>
+	/// Gibt zurück, ob der Dither-Modus ein geordneter Dither-Modus ist.
+	/// </summary>
+	public static bool IsOrderedDither(this DitherMode mode) => mode >= DitherMode.Bayer2x2;
 
 	/// <summary>
 	/// Berechnet die wahrgenommene Helligkeit einer Farbe.
@@ -191,19 +200,9 @@ class Program {
 	/// <param name="color">Die Farbe.</param>
 	/// <param name="gamma">Der Gamma-Korrekturfaktor. Standard ist 0.75. Höhere Werte machen das Bild dunkler.</param>
 	/// <returns>Die wahrgenommene Helligkeit als Byte-Wert (0-255).</returns>
-	static byte GetPercievedBrightness(Color color, double gamma = DefaultGamma) {
+	public static byte GetPerceivedBrightness(this Color color, double gamma = Program.DefaultGamma) {
 		double brightness = color.R * 0.299 + color.G * 0.587 + color.B * 0.114;
 		brightness = Math.Pow(brightness / 255.0, gamma) * 255.0;
 		return (byte) brightness;
 	}
-
-	#endregion
-}
-
-internal static class Extensions {
-
-	/// <summary>
-	/// Gibt zurück, ob der Dither-Modus ein geordneter Dither-Modus ist.
-	/// </summary>
-	public static bool IsOrderedDither(this DitherMode mode) => mode >= DitherMode.Bayer2x2;
 }
