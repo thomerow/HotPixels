@@ -6,7 +6,7 @@ using System.Globalization;
 
 partial class Program {
 
-	private const string PrinterName = "EM5820";
+	private const string PrinterName = "EM5820";  // TODO: Druckernamen per Kommandzeilenargument übergeben oder alle druckbaren Geräte auflisten und auswählbar machen
 	private const double DefaultGamma = 0.75;
 	private const int WidthDots = 384; // Maximale Druckerbreite in Dots
 	private const int BytesPerRow = WidthDots / 8;

@@ -1,6 +1,6 @@
 # HotPixels
 
-**HotPixels** is a simple cross-platform command-line tool that converts images into ESC/POS raster graphics for thermal printers.  
+**HotPixels** is a simple command-line tool for Microsoft Windows that converts images into ESC/POS raster graphics for thermal printers.
 It supports multiple dithering algorithms and optional gamma correction to fine‑tune brightness and contrast.
 
 ---
