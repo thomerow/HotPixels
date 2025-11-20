@@ -23,7 +23,7 @@ partial class Program {
 			Console.WriteLine("Bitte den Pfad zum Bild als erstes Argument angeben.");
 			// Mögliche Dither-Modi aus enum DitherMode automatisch auflisten
 			string[] ditherNames = Enum.GetNames(typeof(DitherMode));
-			Console.WriteLine("Mögliche Dither-Modi als zweites Argument (Standard ist FloydSteinberg):");
+			Console.WriteLine("Mögliche Dither-Modi als optionales, zweites Argument (Zahlenwert von 1 beginnend, Standard ist 2 (Jarvis)):");
 			for (int i = 0; i < ditherNames.Length; ++i) {
 				Console.WriteLine($"  {i + 1}: {ditherNames[i]}");
 			}
