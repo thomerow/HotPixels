@@ -43,7 +43,7 @@ sealed class HalftoneKernel {
 	/// </summary>
 	public static float GetBayer2x2Threshold(int x, int y) {
 		int v = Bayer2x2[y & 1, x & 1]; // y % 2, x % 2
-												  // (v + 0.5) / 4 → 0..1, *255 → 0..255
+		// (v + 0.5) / 4 → 0..1, *255 → 0..255
 		return (float) ((v + 0.5) / 4.0 * 255.0);
 	}
 
@@ -52,7 +52,7 @@ sealed class HalftoneKernel {
 	/// </summary>
 	public static float GetBayer4x4Threshold(int x, int y) {
 		int v = Bayer4x4[y & 3, x & 3]; // y % 4, x % 4
-												  // (v + 0.5) / 16 → 0..1, *255 → 0..255
+		// (v + 0.5) / 16 → 0..1, *255 → 0..255
 		return (float) ((v + 0.5) / 16.0 * 255.0);
 	}
 
@@ -61,7 +61,7 @@ sealed class HalftoneKernel {
 	/// </summary>
 	public static float GetBayer8x8Threshold(int x, int y) {
 		int v = Bayer8x8[y & 7, x & 7]; // y % 8, x % 8
-												  // (v + 0.5) / 64 → 0..1, *255 → 0..255
+		// (v + 0.5) / 64 → 0..1, *255 → 0..255
 		return (float) ((v + 0.5) / 64.0 * 255.0);
 	}
 
