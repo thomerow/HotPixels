@@ -1,15 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <LangVersion>12.0</LangVersion>
-  </PropertyGroup>
+   <PropertyGroup>
+      <OutputType>Exe</OutputType>
+      <TargetFramework>net8.0-windows</TargetFramework>
+      <ImplicitUsings>enable</ImplicitUsings>
+      <Nullable>disable</Nullable>
+      <LangVersion>12.0</LangVersion>
 
-  <ItemGroup>
-    <PackageReference Include="System.Drawing.Common" Version="8.0.22" />
-  </ItemGroup>
+      <AssemblyTitle>HotPixels</AssemblyTitle>
+      <Description>Command-line tool for ESC/POS raster printing with multiple dithering algorithms.</Description>
+      <Company>HotPixels Project</Company>
+      <Product>HotPixels CLI</Product>
+      <Authors>Thorsten Kummerow</Authors>
+      <Copyright>© 2025 Thorsten Kummerow</Copyright>
+
+      <Version>1.0.0</Version>
+      <FileVersion>1.0.0</FileVersion>
+      <AssemblyVersion>1.0.0</AssemblyVersion>
+   </PropertyGroup>
+
+   <ItemGroup>
+      <PackageReference Include="System.Drawing.Common" Version="8.0.22" />
+   </ItemGroup>
 
 </Project>
