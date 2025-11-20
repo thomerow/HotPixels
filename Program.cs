@@ -7,6 +7,7 @@ using MyEscPosTest;
 
 partial class Program {
 
+	private const string PrinterName = "EM5820";
 	private const double DefaultGamma = 0.75;
 	private const int WidthDots = 384; // Maximale Druckerbreite in Dots
 	private const int BytesPerRow = WidthDots / 8;
@@ -15,8 +16,6 @@ partial class Program {
 	private static DitherMode s_ditherMode = DitherMode.Jarvis;
 
 	static void Main(string[] args) {
-		string printerName = "EM5820";
-
 		// Bild-Dateiname ist im ersten Argument, optionaler Dither-Modus im zweiten Argument (als Zahl von 1 beginnend), optionaler Gamma-Wert im dritten Argument:
 
 		// Keine Argumente übergeben:
@@ -68,11 +67,11 @@ partial class Program {
 		byte[] escposImage = CreateEscPosRasterImage(bitmap);
 
 		// An Drucker senden
-		RawPrinter.SendBytes(printerName, escposImage);
+		RawPrinter.SendBytes(PrinterName, escposImage);
 
 		// Vier Zeilenumbrüche senden, damit man die Ausgabe sieht und das Papier abreißen kann
 		byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
-		RawPrinter.SendBytes(printerName, lineFeeds);
+		RawPrinter.SendBytes(PrinterName, lineFeeds);
 	}
 
 	/// <summary>
