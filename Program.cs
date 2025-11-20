@@ -122,7 +122,7 @@ partial class Program {
 	/// <param name="imageData">Das Array, in das die 1-Bit Bilddaten geschrieben werden.</param>
 	private static void Dither(float[,] grayData, Size size, byte[] imageData) {
 		int index = 0, w = size.Width, h = size.Height;
-		float oldValue, threshold, newValue, err;
+		float oldValue, threshold, newValue = 0, err;
 		Action<float[,], int, int, int, int, float> ditherKernel = null;
 		Func<int, int, float> getThreshold = null;
 
@@ -152,12 +152,11 @@ partial class Program {
 				byte b = 0;
 				for (int bit = 0; bit < 8; ++bit) {
 					int x = bx * 8 + bit;
-					oldValue = grayData[x, y];
+					oldValue = grayData[x, y]; // Aktuellen Graustufenwert lesen
 
 					if (ditherKernel != null) {
 						// Fehlerverteilungskernel anwenden
 						newValue = (oldValue < 128) ? 0 : 255;
-						if (newValue == 0) b |= (byte) (0x80 >> bit); // Bit setzen
 						err = oldValue - newValue; // Quantisierungsfehler
 						ditherKernel.Invoke(grayData, w, h, y, x, err);
 					}
@@ -166,6 +165,8 @@ partial class Program {
 						threshold = getThreshold(x, y);
 						newValue = (oldValue < threshold) ? 0 : 255;
 					}
+
+					if (newValue == 0) b |= (byte) (0x80 >> bit); // Bit setzen
 				}
 				imageData[index++] = b;
 			}
