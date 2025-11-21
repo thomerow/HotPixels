@@ -21,7 +21,7 @@ It supports multiple dithering algorithms and optional gamma correction to fineâ
 
 ## ðŸ“– Usage
 
-```powershell
+```
 HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
 ```
 
