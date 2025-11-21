@@ -76,7 +76,7 @@ HotPixels logo.bmp "ESC POS USB" 2 0.6
 ## 🖨️ Setting Up an ESC/POS Thermal Printer on Windows
 
 Before using **HotPixels**, your ESC/POS printer must be installed in Windows.  
-Most inexpensive 58 mm / 80 mm thermal printers identify as a USB serial device with a vendor-specific driver, but you can safely install them as a **Generic / Text Only printer**.
+Most inexpensive 58 mm / 80 mm thermal printers identify as a USB serial device with a vendor-specific driver, but you can safely install them as a **Generic / Text Only** printer.
 
 Follow these steps:
 
