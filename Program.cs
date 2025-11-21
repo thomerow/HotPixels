@@ -37,8 +37,8 @@ class Program {
          }
 
          // List possible dither modes from enum DitherMode automatically
-         string[] ditherNames = Enum.GetNames(typeof(DitherMode));
          Console.WriteLine($"Possible dither modes as optional third argument (numeric value starting from 1, default is {(int)DefaultDitherMode} ({DefaultDitherMode})):");
+         string[] ditherNames = Enum.GetNames(typeof(DitherMode));
          for (int i = 0; i < ditherNames.Length; ++i) {
             Console.WriteLine($"  {i + 1}: {ditherNames[i]}");
          }
