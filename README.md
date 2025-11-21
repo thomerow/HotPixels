@@ -32,7 +32,7 @@ HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
 
 - **printerName**  
   Name of the installed ESC/POS printer.  
-  Use quotes if the name contains spaces.
+  Use quotes if the name contains spaces.  
   Run the program without arguments to list all installed printers.
 
 - **ditherModeIndex** (optional, 1‑based integer)  
