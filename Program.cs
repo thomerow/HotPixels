@@ -5,7 +5,6 @@ using HotPixels.Imaging.Dithering;
 using HotPixels.Printing;
 using System.Globalization;
 using System.Drawing.Printing;
-using System.Runtime.CompilerServices;
 
 class Program {
 
