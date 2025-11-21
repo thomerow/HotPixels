@@ -20,7 +20,8 @@ class Program {
 	/// The main entry point of the application.
 	/// </summary>
 	static void Main(string[] args) {
-		// Image file name is the first argument, optional dither mode as the second argument (as a number starting from 1), optional gamma value as the third argument:
+		// Image file name as the first argument, printer name as the second argument, optional dither
+		// mode as the third argument (as a number starting from 1), optional gamma value as the fourth argument:
 
 		// Too few arguments provided:
 		if (args.Length < 2) {
