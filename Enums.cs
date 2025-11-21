@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace HotPixels.Imaging.Dithering;
 
 /// <summary>
-/// Dithering-Modi for image processing.
+/// Dithering modes for image processing.
 /// </summary>
 enum DitherMode {
    FloydSteinberg = 1,
