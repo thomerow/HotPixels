@@ -104,13 +104,13 @@ class Program {
 	/// </summary>
 	static byte[] CreateEscPosRasterImage(Bitmap input) {
 		// Calculate scaling factor from input image width and maximum printer width (384 dots)
-		float scaleFactor = 384.0f / input.Width;
+		float scaleFactor = ((float) WidthDots) / input.Width;
 
 		// Calculate height of scaled image
 		int scaledHeight = (int) Math.Round(input.Height * scaleFactor);
 
 		// Create scaled copy of input image
-		using Bitmap resized = new(input, new Size(384, scaledHeight));
+		using Bitmap resized = new(input, new Size(WidthDots, scaledHeight));
 
 		int dataLen = BytesPerRow * scaledHeight;
 		byte[] imageData = new byte[dataLen];
