@@ -10,14 +10,14 @@ namespace HotPixels.Imaging.Dithering;
 /// Dithering-Modi for image processing.
 /// </summary>
 enum DitherMode {
-	FloydSteinberg = 1,
-	Jarvis,
-	Stucki,
-	Burkes,
-	SierraLite,
-	Atkinson,
-	Bayer2x2,
-	Bayer4x4,
-	Bayer8x8,
-	Halftone4x4,
+   FloydSteinberg = 1,
+   Jarvis,
+   Stucki,
+   Burkes,
+   SierraLite,
+   Atkinson,
+   Bayer2x2,
+   Bayer4x4,
+   Bayer8x8,
+   Halftone4x4,
 }
