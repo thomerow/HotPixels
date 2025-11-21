@@ -13,7 +13,6 @@ class Program {
    public const int BytesPerRow = WidthDots / 8;
    public const DitherMode DefaultDitherMode = DitherMode.Jarvis;
 
-   private static string s_printerName;
    private static double s_gamma = DefaultGamma;
    private static DitherMode s_ditherMode = DefaultDitherMode;
 
@@ -32,8 +31,8 @@ class Program {
 
          // List installed printers
          Console.WriteLine("Installed printers:");
-         foreach (string printerName in PrinterSettings.InstalledPrinters) {
-            Console.WriteLine($"  \"{printerName}\"");
+         foreach (string printer in PrinterSettings.InstalledPrinters) {
+            Console.WriteLine($"  \"{printer}\"");
          }
 
          // List possible dither modes from enum DitherMode automatically
@@ -57,9 +56,9 @@ class Program {
       imagePath = Path.GetFullPath(imagePath);
 
       // Use second argument as printer name (ESC/POS capable printer, must be in quotes if name contains spaces)
-      s_printerName = args[1];
+      string printerName = args[1];
       // Rough verification if printer name is empty
-      if (string.IsNullOrWhiteSpace(s_printerName)) {
+      if (string.IsNullOrWhiteSpace(printerName)) {
          Console.WriteLine("Invalid printer name specified.");
          return;
       }
@@ -93,11 +92,11 @@ class Program {
       byte[] escposImage = CreateEscPosRasterImage(bitmap);
 
       // Send to printer
-      RawPrinter.SendBytes(s_printerName, escposImage);
+      RawPrinter.SendBytes(printerName, escposImage);
 
       // Send four line feeds so the output is visible and the paper can be torn off
       byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
-      RawPrinter.SendBytes(s_printerName, lineFeeds);
+      RawPrinter.SendBytes(printerName, lineFeeds);
    }
 
    /// <summary>
