@@ -73,6 +73,57 @@ HotPixels logo.bmp "ESC POS USB" 2 0.6
 
 ---
 
+## 🖨️ Setting Up an ESC/POS Thermal Printer on Windows
+
+Before using **HotPixels**, your ESC/POS printer must be installed in Windows.  
+Most inexpensive 58 mm / 80 mm thermal printers identify as a USB serial device with a vendor-specific driver, but you can safely install them as a **Generic / Text Only printer**.
+
+Follow these steps:
+
+### 1. Connect the printer via USB
+
+- Plug the printer into your Windows machine.
+- Windows will usually show it as a USB printing device (often with names like *USB Printing Support*, *GXMcu Micro-Printer*, *POS Printer*, etc.).
+
+### 2. Open the Windows printer management dialog
+
+- Open **Control Panel**
+- Go to **Devices and Printers**
+- Click **Add Printer**
+
+### 3. Add the printer manually
+
+- Choose **The printer that I want isn’t listed**
+- Select **Add a local printer or network printer with manual settings**
+- For the port, choose the automatically created **USB00X** port (e.g. USB001, USB002)
+
+### 4. Select the driver
+
+- In the manufacturer list, select **Generic**
+- In the model list, choose **Generic / Text Only**
+- Finish the installation
+
+### 5. Rename the printer (optional but recommended)
+
+Give it a meaningful name like:
+
+- `EM5820`
+- `Thermal Receipt Printer`
+- `ESC POS USB`
+
+You will use this exact name in the HotPixels command line:
+
+```powershell
+HotPixels image.png "ESC POS USB"
+```
+
+### Why "Generic / Text Only"?
+
+ESC/POS is a **raw byte protocol**, not a page-layout language.  
+Windows GDI drivers do not understand ESC/POS image commands, so you *must* use a raw-printing queue. The **Generic / Text Only** driver creates exactly that.
+
+---
+
 ## 📄 License
 
 This project is provided under the MIT License. See [LICENSE.md](./LICENSE.md) for details.
