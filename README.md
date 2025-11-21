@@ -9,7 +9,7 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 
 ---
 
-## Features
+## ✨ Features
 
 - Converts images to ESC/POS **raster format** (`GS v 0`)
 - Multiple **dithering modes** (error‑diffusion + ordered dithers)
@@ -19,13 +19,13 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 
 ---
 
-## Usage
+## 📖 Usage
 
-```
+```powershell
 HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
 ```
 
-### Arguments
+### 📥 Arguments
 
 - **imagePath**  
   Path to the image file.
@@ -46,26 +46,26 @@ HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
 
 ---
 
-## Examples
+## 📚 Examples
 
-### Print using default settings
-```
+### 🖨️ Print using default settings
+```powershell
 HotPixels image.png "EM5820"
 ```
 
-### Print with a specific dither mode
-```
+### 🖨️ Print with a specific dither mode
+```powershell
 HotPixels photo.jpg "My Thermal Printer" 3
 ```
 
-### Print with dither mode + custom gamma
-```
+### 🖨️ Print with dither mode + custom gamma
+```powershell
 HotPixels logo.bmp "ESC POS USB" 2 0.6
 ```
 
 ---
 
-## Requirements
+## 🛠️ Requirements
 
 - Windows  
 - .NET 8 or newer  
@@ -73,6 +73,6 @@ HotPixels logo.bmp "ESC POS USB" 2 0.6
 
 ---
 
-## License
+## 📄 License
 
-MIT
+This project is provided under the MIT License. See [LICENSE.md](./LICENSE.md) for details.
