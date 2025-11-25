@@ -82,8 +82,8 @@ class Program {
          else s_gamma = gamma;
       }
 
+      // Load image
       try {
-         // Load image
          bitmap = new(imagePath);
       }
       catch {
