@@ -20,6 +20,8 @@ class Program {
    /// The main entry point of the application.
    /// </summary>
    static void Main(string[] args) {
+      Bitmap bitmap = null;
+
       // Image file name as the first argument, printer name as the second argument, optional dither
       // mode as the third argument (as a number starting from 1), optional gamma value as the fourth argument:
 
@@ -36,7 +38,7 @@ class Program {
          }
 
          // List possible dither modes from enum DitherMode automatically
-         Console.WriteLine($"Possible dither modes as optional third argument (numeric value starting from 1, default is {(int)DefaultDitherMode} ({DefaultDitherMode})):");
+         Console.WriteLine($"Possible dither modes as optional third argument (numeric value starting from 1, default is {(int) DefaultDitherMode} ({DefaultDitherMode})):");
          string[] ditherNames = Enum.GetNames(typeof(DitherMode));
          for (int i = 0; i < ditherNames.Length; ++i) {
             Console.WriteLine($"  {i + 1}: {ditherNames[i]}");
@@ -80,9 +82,27 @@ class Program {
          else s_gamma = gamma;
       }
 
-      // Load image
-      using Bitmap bitmap = new(imagePath);
+      try {
+         // Load image
+         bitmap = new(imagePath);
+      }
+      catch {
+         Console.WriteLine($"Could not load image \"{imagePath}\".");
+         Environment.Exit(1);
+      }
 
+      // Send bitmap to printer
+      using (bitmap) {
+         SendBitmapToPrinter(printerName, bitmap);
+      }
+   }
+
+   /// <summary>
+   /// Sends a bitmap image to the specified ESC/POS printer.
+   /// </summary>
+   /// <param name="printerName">The name of the printer.</param>
+   /// <param name="bitmap">The bitmap image to send.</param>
+   private static void SendBitmapToPrinter(string printerName, Bitmap bitmap) {
       // Rotate image by 90° if it is wider than tall
       if (bitmap.Width > bitmap.Height) {
          bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
@@ -126,18 +146,18 @@ class Program {
       // Prepare image data and convert to 1-bit using selected dithering
       Dither(grayData, resized.Size, imageData);
 
-      // Prepare ESC/POS data array (10 byte header + image data)
-      byte[] result = new byte[10 + dataLen];
-
-      // Header
+      // ESC/POS raster image header for GS v 0
       byte[] escposImageHeader = [
          0x1B, 0x40,             // ESC @ (Initialize)
 
          0x1D, 0x76, 0x30, 0x00, // GS 'v' '0' m  (m = 0: normal)
-         BytesPerRow, 0,			// xL, xH (width in bytes)
-         (byte)(scaledHeight & 0xFF),        // yL
-         (byte)((scaledHeight >> 8) & 0xFF), // yH
+         BytesPerRow, 0,			// xL, xH (width in bytes, low byte, high byte)
+         (byte)(scaledHeight & 0xFF),        // yL (low byte of height)
+         (byte)((scaledHeight >> 8) & 0xFF), // yH (high byte of height)
       ];
+
+      // Prepare ESC/POS data array (header + image data)
+      byte[] result = new byte[escposImageHeader.Length + imageData.Length];
 
       // Copy header
       Buffer.BlockCopy(escposImageHeader, 0, result, 0, escposImageHeader.Length);
