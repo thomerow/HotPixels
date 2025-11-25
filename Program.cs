@@ -151,7 +151,7 @@ class Program {
          0x1B, 0x40,             // ESC @ (Initialize)
 
          0x1D, 0x76, 0x30, 0x00, // GS 'v' '0' m  (m = 0: normal)
-         BytesPerRow, 0,			// xL, xH (width in bytes, low byte, high byte)
+         BytesPerRow, 0,			// xL, xH (width in bytes (low byte, high byte))
          (byte)(scaledHeight & 0xFF),        // yL (low byte of height)
          (byte)((scaledHeight >> 8) & 0xFF), // yH (high byte of height)
       ];
