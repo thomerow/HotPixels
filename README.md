@@ -22,18 +22,18 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 ## 📖 Usage
 
 ```
-HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
+HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma]
 ```
 
 ### 📥 Arguments
-
-- **imagePath**  
-  Path to the image file.
 
 - **printerName**  
   Name of the installed ESC/POS printer.  
   Use quotes if the name contains spaces.  
   Run the program without arguments to list all installed printers.
+
+- **imagePath**  
+  Path to the image file.
 
 - **ditherModeIndex** (optional, 1‑based integer)  
   Selects a dithering algorithm.  
@@ -50,17 +50,17 @@ HotPixels <imagePath> <printerName> [ditherModeIndex] [gamma]
 
 ### 🖨️ Print using default settings
 ```powershell
-HotPixels image.png "EM5820"
+HotPixels "EM5820" image.png
 ```
 
 ### 🖨️ Print with a specific dither mode
 ```powershell
-HotPixels photo.jpg "My Thermal Printer" 3
+HotPixels "My Thermal Printer" photo.jpg 3
 ```
 
 ### 🖨️ Print with dither mode + custom gamma
 ```powershell
-HotPixels logo.bmp "ESC POS USB" 2 0.6
+HotPixels "ESC POS USB" logo.bmp 2 0.6
 ```
 
 ---
@@ -114,7 +114,7 @@ Give it a meaningful name like:
 You will use this exact name in the HotPixels command line:
 
 ```powershell
-HotPixels image.png "ESC POS USB"
+HotPixels "ESC POS USB" image.png
 ```
 
 ### Why "Generic / Text Only"?

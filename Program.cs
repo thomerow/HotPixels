@@ -22,14 +22,14 @@ class Program {
    static void Main(string[] args) {
       Bitmap bitmap = null;
 
-      // Image file name as the first argument, printer name as the second argument, optional dither
+      // Printer name as the first argument, image file name as the second argument, optional dither
       // mode as the third argument (as a number starting from 1), optional gamma value as the fourth argument:
 
       // Too few arguments provided:
       if (args.Length < 2) {
          // Output a note that image path and printer name must be provided
-         Console.WriteLine("Please specify the path to the image as the first argument and the printer name as the second argument.");
-         Console.WriteLine("Example: HotPixels.exe C:\\Images\\testimage.png \"My ESC/POS Printer\"");
+         Console.WriteLine("Please specify the printer name as the first argument and the path to the image as the second argument.");
+         Console.WriteLine("Example: HotPixels.exe \"My ESC/POS Printer\" C:\\Images\\testimage.png");
 
          // List installed printers
          Console.WriteLine("Installed printers:");
@@ -52,18 +52,18 @@ class Program {
          return;
       }
 
-      // Use first argument as image path
-      string imagePath = args[0];
-      // Get absolute path
-      imagePath = Path.GetFullPath(imagePath);
-
-      // Use second argument as printer name (ESC/POS capable printer, must be in quotes if name contains spaces)
-      string printerName = args[1];
+      // Use first argument as printer name (ESC/POS capable printer, must be in quotes if name contains spaces)
+      string printerName = args[0];
       // Rough verification if printer name is empty
       if (string.IsNullOrWhiteSpace(printerName)) {
          Console.WriteLine("Invalid printer name specified.");
          return;
       }
+
+      // Use second argument as image path
+      string imagePath = args[1];
+      // Get absolute path
+      imagePath = Path.GetFullPath(imagePath);
 
       // Use third argument as dither mode (1-based)
       if (args.Length >= 3 && int.TryParse(args[2], out int ditherModeIndex)) {
