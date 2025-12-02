@@ -102,9 +102,10 @@ class Program {
    /// </summary>
    /// <param name="printerName">The name of the printer.</param>
    /// <param name="bitmap">The bitmap image to send.</param>
-   private static void SendBitmapToPrinter(string printerName, Bitmap bitmap) {
+   /// <param name="rotateIfWide">If true, rotates the image by 90° if it is wider than tall.</param>
+   private static void SendBitmapToPrinter(string printerName, Bitmap bitmap, bool rotateIfWide = true) {
       // Rotate image by 90° if it is wider than tall
-      if (bitmap.Width > bitmap.Height) {
+      if (rotateIfWide && (bitmap.Width > bitmap.Height)) {
          bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
       }
 
