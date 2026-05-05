@@ -9,12 +9,15 @@ using System.Text;
 class Program {
 
    public const double DefaultGamma = 0.75;
-   public const int WidthDots = 384; // Maximum printer width in dots
-   public const int BytesPerRow = WidthDots / 8;
+   public const int DefaultWidthDots = 384;
    public const DitherMode DefaultDitherMode = DitherMode.Jarvis;
 
    private static double s_gamma = DefaultGamma;
    private static DitherMode s_ditherMode = DefaultDitherMode;
+   private static int s_widthDots = DefaultWidthDots;
+   private static bool s_autoCut = false;
+
+   private static int BytesPerRow => s_widthDots / 8;
 
    /// <summary>
    /// The main entry point of the application.
@@ -49,6 +52,18 @@ class Program {
             "Optionally, a gamma value (floating point number greater than 0) can be specified as the fourth argument. " +
             $"Default value is {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (lower values make the image brighter)."
          );
+
+         // Output note about width in dots
+         Console.WriteLine(
+            $"Optionally, the print width in dots can be specified as the fifth argument (must be a multiple of 8). " +
+            $"Default value is {DefaultWidthDots}."
+         );
+
+         // Output note about auto-cut
+         Console.WriteLine(
+            "Optionally, specify 1 as the sixth argument to automatically cut the paper after printing (requires a cutter, e.g. Epson TM-T88III). " +
+            "Default is 0 (no auto-cut)."
+         );
          return;
       }
 
@@ -80,6 +95,21 @@ class Program {
       if (args.Length >= 4 && double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out double gamma)) {
          if (gamma <= 0) Console.WriteLine($"Gamma value must be greater than 0. Default value {s_gamma.ToString(CultureInfo.InvariantCulture)} will be used.");
          else s_gamma = gamma;
+      }
+
+      // If a fifth argument is provided, use as width in dots (must be a multiple of 8)
+      if (args.Length >= 5 && int.TryParse(args[4], out int widthDots)) {
+         if (widthDots <= 0 || widthDots % 8 != 0)
+            Console.WriteLine($"Width must be a positive multiple of 8. Default value {DefaultWidthDots} will be used.");
+         else {
+            s_widthDots = widthDots;
+            Console.WriteLine($"Print width set to {s_widthDots} dots.");
+         }
+      }
+
+      // If a sixth argument is provided, use as auto-cut flag (1 = cut, 0 = no cut)
+      if (args.Length >= 6 && int.TryParse(args[5], out int autoCut)) {
+         s_autoCut = autoCut != 0;
       }
 
       // Load image
@@ -115,9 +145,20 @@ class Program {
       // Send to printer
       RawPrinter.SendBytes(printerName, escposImage);
 
-      // Send four line feeds so the output is visible and the paper can be torn off
-      byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
-      RawPrinter.SendBytes(printerName, lineFeeds);
+      if (s_autoCut) {
+         // Two concatenated ESC/POS commands:
+         //   ESC d n  (0x1B 0x64 0x04): "Print and Feed n Lines" — advances the paper by 4 lines
+         //            so the printed output clears the cutter blade before cutting.
+         //   GS  V 0  (0x1D 0x56 0x00): "Select Cut Mode and Cut Paper" with mode 0 = full cut —
+         //            drives the built-in guillotine cutter to sever the paper completely.
+         byte[] cutCommand = [0x1B, 0x64, 0x04, 0x1D, 0x56, 0x00];
+         RawPrinter.SendBytes(printerName, cutCommand);
+      }
+      else {
+         // Send four line feeds so the output is visible and the paper can be torn off
+         byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
+         RawPrinter.SendBytes(printerName, lineFeeds);
+      }
    }
 
    /// <summary>
@@ -125,13 +166,13 @@ class Program {
    /// </summary>
    static byte[] CreateEscPosRasterImage(Bitmap input) {
       // Calculate scaling factor from input image width and maximum printer width
-      float scaleFactor = ((float) WidthDots) / input.Width;
+      float scaleFactor = ((float) s_widthDots) / input.Width;
 
       // Calculate height of scaled image
       int scaledHeight = (int) Math.Round(input.Height * scaleFactor);
 
       // Create scaled copy of input image
-      using Bitmap resized = new(input, new Size(WidthDots, scaledHeight));
+      using Bitmap resized = new(input, new Size(s_widthDots, scaledHeight));
 
       int dataLen = BytesPerRow * scaledHeight;
       byte[] imageData = new byte[dataLen];
@@ -152,7 +193,7 @@ class Program {
          0x1B, 0x40,             // ESC @ (Initialize)
 
          0x1D, 0x76, 0x30, 0x00, // GS 'v' '0' m  (m = 0: normal)
-         BytesPerRow, 0,			// xL, xH (width in bytes (low byte, high byte))
+         (byte) BytesPerRow, 0,	// xL, xH (width in bytes (low byte, high byte))
          (byte)(scaledHeight & 0xFF),        // yL (low byte of height)
          (byte)((scaledHeight >> 8) & 0xFF), // yH (high byte of height)
       ];

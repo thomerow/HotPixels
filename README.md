@@ -14,6 +14,8 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 - Converts images to ESC/POS **raster format** (`GS v 0`)
 - Multiple **dithering modes** (error‑diffusion + ordered dithers)
 - Optional **gamma correction**
+- Configurable **print width** in dots
+- Optional **automatic paper cut** (requires a cutter, e.g. Epson TM‑T88III)
 - Automatically rotates landscape images to portrait
 - Prints directly to any installed Windows ESC/POS printer
 
@@ -22,7 +24,7 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 ## 📖 Usage
 
 ```
-HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma]
+HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma] [widthDots] [autoCut]
 ```
 
 ### 📥 Arguments
@@ -44,6 +46,16 @@ HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma]
   Lower = brighter output.  
   Default: **0.75**
 
+- **widthDots** (optional, positive multiple of 8)  
+  Sets the print width in dots.  
+  Must match the physical paper width your printer is configured for (e.g. 384 for 48 mm, 576 for 72 mm).  
+  Default: **384**
+
+- **autoCut** (optional, `0` or `1`)  
+  Set to `1` to send an automatic paper-cut command (`ESC d 4` + `GS V 0`) after printing.  
+  Requires a printer with a built-in guillotine cutter (e.g. Epson TM‑T88III).  
+  Default: **0** (no cut)
+
 ---
 
 ## 📚 Examples
@@ -61,6 +73,11 @@ HotPixels "My Thermal Printer" photo.jpg 3
 ### 🖨️ Print with dither mode + custom gamma
 ```powershell
 HotPixels "ESC POS USB" logo.bmp 2 0.6
+```
+
+### 🖨️ Print with custom width (576 dots) and auto-cut enabled
+```powershell
+HotPixels "Epson TM-T88III" receipt.png 3 0.75 576 1
 ```
 
 ---
