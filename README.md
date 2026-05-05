@@ -48,7 +48,7 @@ HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma] [widthDots] [autoC
 
 - **widthDots** (optional, positive multiple of 8)  
   Sets the print width in dots.  
-  Must match the physical paper width your printer is configured for (e.g. 384 for 50 mm, 512 for 80 mm).  
+  Must match the physical paper width your printer is configured for (e.g. 384 for 58 mm, 512 for 80 mm).  
   Default: **384**
 
 - **autoCut** (optional, `0` or `1`)  
