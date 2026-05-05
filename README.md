@@ -48,7 +48,7 @@ HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma] [widthDots] [autoC
 
 - **widthDots** (optional, positive multiple of 8)  
   Sets the print width in dots.  
-  Must match the physical paper width your printer is configured for (e.g. 384 for 48 mm, 576 for 72 mm).  
+  Must match the physical paper width your printer is configured for (e.g. 384 for 50 mm, 512 for 80 mm).  
   Default: **384**
 
 - **autoCut** (optional, `0` or `1`)  
@@ -75,9 +75,9 @@ HotPixels "My Thermal Printer" photo.jpg 3
 HotPixels "ESC POS USB" logo.bmp 2 0.6
 ```
 
-### 🖨️ Print with custom width (576 dots) and auto-cut enabled
+### 🖨️ Print with custom width (512 dots) and auto-cut enabled
 ```powershell
-HotPixels "Epson TM-T88III" receipt.png 3 0.75 576 1
+HotPixels "Epson TM-T88III" receipt.png 3 0.75 512 1
 ```
 
 ---

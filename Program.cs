@@ -147,11 +147,11 @@ class Program {
 
       if (s_autoCut) {
          // Two concatenated ESC/POS commands:
-         //   ESC d n  (0x1B 0x64 0x04): "Print and Feed n Lines" — advances the paper by 4 lines
+         //   ESC d n  (0x1B 0x64 0x06): "Print and Feed n Lines" — advances the paper by 6 lines
          //            so the printed output clears the cutter blade before cutting.
          //   GS  V 0  (0x1D 0x56 0x00): "Select Cut Mode and Cut Paper" with mode 0 = full cut —
          //            drives the built-in guillotine cutter to sever the paper completely.
-         byte[] cutCommand = [0x1B, 0x64, 0x04, 0x1D, 0x56, 0x00];
+         byte[] cutCommand = [0x1B, 0x64, 0x06, 0x1D, 0x56, 0x00];
          RawPrinter.SendBytes(printerName, cutCommand);
       }
       else {
