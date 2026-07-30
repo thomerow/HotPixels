@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -45,8 +46,11 @@ public static class RawPrinter {
    /// Sends a byte array as raw data to the given printer.
    /// </summary>
    public static void SendBytes(string printerName, byte[] bytes) {
+      // Nothing to do for an empty job
+      if (bytes is null or { Length: 0 }) return;
+
       if (!OpenPrinter(printerName, out IntPtr hPrinter, IntPtr.Zero)) {
-         throw new InvalidOperationException($"OpenPrinter failed with printer name '{printerName}'.");
+         throw new InvalidOperationException($"OpenPrinter failed with printer name '{printerName}'.", LastError());
       }
 
       try {
@@ -56,18 +60,35 @@ public static class RawPrinter {
          };
 
          if (!StartDocPrinter(hPrinter, 1, docInfo)) {
-            throw new InvalidOperationException("StartDocPrinter failed.");
+            throw new InvalidOperationException("StartDocPrinter failed.", LastError());
          }
          try {
             if (!StartPagePrinter(hPrinter)) {
-               throw new InvalidOperationException("StartPagePrinter failed.");
+               throw new InvalidOperationException("StartPagePrinter failed.", LastError());
             }
             try {
                IntPtr pUnmanagedBytes = Marshal.AllocHGlobal(bytes.Length);
                try {
                   Marshal.Copy(bytes, 0, pUnmanagedBytes, bytes.Length);
-                  if (!WritePrinter(hPrinter, pUnmanagedBytes, bytes.Length, out int _)) {
-                     throw new InvalidOperationException("WritePrinter failed.");
+
+                  // WritePrinter is not guaranteed to consume the whole buffer in one call, so keep
+                  // writing until everything is gone. Raster image jobs are large (a full-width photo
+                  // is easily a few hundred KB), and a silently short write would truncate the bottom
+                  // of the image instead of reporting an error.
+                  int totalWritten = 0;
+                  while (totalWritten < bytes.Length) {
+                     if (!WritePrinter(hPrinter, IntPtr.Add(pUnmanagedBytes, totalWritten), bytes.Length - totalWritten, out int written)) {
+                        throw new InvalidOperationException(
+                           $"WritePrinter failed after {totalWritten} of {bytes.Length} bytes.", LastError()
+                        );
+                     }
+                     // Guard against an endless loop if the driver reports success but consumes nothing
+                     if (written <= 0) {
+                        throw new InvalidOperationException(
+                           $"WritePrinter made no progress at offset {totalWritten} of {bytes.Length} bytes."
+                        );
+                     }
+                     totalWritten += written;
                   }
                }
                finally {
@@ -86,4 +107,10 @@ public static class RawPrinter {
          ClosePrinter(hPrinter);
       }
    }
+
+   /// <summary>
+   /// Wraps the last Win32 error in an exception so failures carry a diagnosable error code.
+   /// Must be called immediately after the failing P/Invoke, before any other one runs.
+   /// </summary>
+   private static Win32Exception LastError() => new(Marshal.GetLastWin32Error());
 }
