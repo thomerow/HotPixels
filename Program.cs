@@ -1,10 +1,7 @@
 ﻿using HotPixels.Imaging;
 using HotPixels.Imaging.Dithering;
 using HotPixels.Printing;
-using System.Drawing;
-using System.Drawing.Printing;
 using System.Globalization;
-using System.Text;
 
 class Program {
 
@@ -23,12 +20,11 @@ class Program {
    /// The main entry point of the application.
    /// </summary>
    static void Main(string[] args) {
-      Bitmap bitmap = null;
-      string printerName, imagePath;
+      string target, imagePath;
 
-      // Printer name and image path are positional; everything else is a named option
+      // Target and image path are positional; everything else is a named option
       try {
-         if (!ParseArguments(args, out printerName, out imagePath)) {
+         if (!ParseArguments(args, out target, out imagePath)) {
             PrintUsage();
             return;
          }
@@ -40,18 +36,12 @@ class Program {
          return;
       }
 
-      // Load image
       try {
-         bitmap = new(imagePath);
+         SendImageToPrinter(target, imagePath);
       }
-      catch {
+      catch (ImageLoadException) {
          Console.WriteLine($"Could not load image \"{imagePath}\".");
          Environment.Exit(1);
-      }
-
-      // Send bitmap to printer
-      using (bitmap) {
-         SendBitmapToPrinter(printerName, bitmap);
       }
    }
 
@@ -61,15 +51,19 @@ class Program {
    private sealed class ArgumentError(string message) : Exception(message);
 
    /// <summary>
-   /// Prints usage information, the installed printers and the available dither modes.
+   /// Prints usage information, the available print targets and the available dither modes.
    /// </summary>
    private static void PrintUsage() {
-      Console.WriteLine("Usage: HotPixels <printerName> <imagePath> [options]");
-      Console.WriteLine("Example: HotPixels.exe \"My ESC/POS Printer\" C:\\Images\\testimage.png --dither=Atkinson");
+      Console.WriteLine("Usage: HotPixels <target> <imagePath> [options]");
+      Console.WriteLine("Example: HotPixels \"My ESC/POS Printer\" testimage.png --dither=Atkinson");
       Console.WriteLine();
 
       Console.WriteLine("Positional arguments:");
-      Console.WriteLine("  printerName    Name of the installed ESC/POS printer (quote it if it contains spaces).");
+      Console.WriteLine("  target         Where to print. The transport follows from its shape:");
+      Console.WriteLine("                   host:port    a network printer, e.g. 192.168.1.50:9100");
+      Console.WriteLine("                   a full path  a device or file, e.g. /dev/usb/lp0 or C:\\out.bin");
+      Console.WriteLine("                   anything else  a print queue name (quote it if it has spaces);");
+      Console.WriteLine("                                  the Windows spooler, or CUPS via \"lp -o raw\".");
       Console.WriteLine("  imagePath      Path to the image file.");
       Console.WriteLine();
 
@@ -86,11 +80,15 @@ class Program {
       Console.WriteLine("  --help, -h, /? Show this help.");
       Console.WriteLine();
 
-      // List installed printers
-      Console.WriteLine("Installed printers:");
-      foreach (string printer in PrinterSettings.InstalledPrinters) {
-         Console.WriteLine($"  \"{printer}\"");
+      // List the print targets this machine offers: spooler queues on Windows, CUPS queues and
+      // printer device nodes on Unix-like systems
+      Console.WriteLine("Available print targets:");
+      bool any = false;
+      foreach (string printTarget in RawPrinter.ListTargets()) {
+         Console.WriteLine($"  \"{printTarget}\"");
+         any = true;
       }
+      if (!any) Console.WriteLine("  (none found)");
       Console.WriteLine();
 
       // List possible dither modes from enum DitherMode automatically. Either spelling works, so
@@ -102,12 +100,12 @@ class Program {
    }
 
    /// <summary>
-   /// Parses the command line into the printer name, the image path and the global settings.
+   /// Parses the command line into the print target, the image path and the global settings.
    /// </summary>
    /// <returns>True if the arguments are usable, false if the usage information should be shown.</returns>
    /// <exception cref="ArgumentError">The command line is malformed.</exception>
-   private static bool ParseArguments(string[] args, out string printerName, out string imagePath) {
-      printerName = null;
+   private static bool ParseArguments(string[] args, out string target, out string imagePath) {
+      target = null;
       imagePath = null;
 
       if (args.Length == 0) return false;
@@ -160,17 +158,17 @@ class Program {
 
       if (positional.Count > 2) {
          throw new ArgumentError(
-            $"unexpected argument \"{positional[2]}\". Only the printer name and the image path are " +
+            $"unexpected argument \"{positional[2]}\". Only the target and the image path are " +
             "positional; every setting is a named option such as --dither, --gamma, --width or --cut."
          );
       }
       if (positional.Count < 2) {
-         throw new ArgumentError("both a printer name and an image path are required.");
+         throw new ArgumentError("both a target and an image path are required.");
       }
 
-      // Printer name (ESC/POS capable printer, must be in quotes if the name contains spaces)
-      printerName = positional[0];
-      if (string.IsNullOrWhiteSpace(printerName)) throw new ArgumentError("the printer name is empty.");
+      // Print target: a queue name, a device path or host:port (quote it if it contains spaces)
+      target = positional[0];
+      if (string.IsNullOrWhiteSpace(target)) throw new ArgumentError("the target is empty.");
 
       // Image path, resolved to an absolute path
       imagePath = Path.GetFullPath(positional[1]);
@@ -233,65 +231,53 @@ class Program {
    }
 
    /// <summary>
-   /// Sends a bitmap image to the specified ESC/POS printer.
+   /// Loads an image and sends it to the specified ESC/POS printer.
    /// </summary>
-   /// <param name="printerName">The name of the printer.</param>
-   /// <param name="bitmap">The bitmap image to send.</param>
+   /// <param name="target">The printer target (queue name, device path or host:port).</param>
+   /// <param name="imagePath">Path to the image file.</param>
    /// <param name="rotateIfWide">If true, rotates the image by 90° if it is wider than tall.</param>
-   private static void SendBitmapToPrinter(string printerName, Bitmap bitmap, bool rotateIfWide = true) {
-      // Rotate image by 90° if it is wider than tall
-      if (rotateIfWide && (bitmap.Width > bitmap.Height)) {
-         bitmap.RotateFlip(RotateFlipType.Rotate90FlipNone);
-      }
+   private static void SendImageToPrinter(string target, string imagePath, bool rotateIfWide = true) {
+      // Load, rotate, scale and convert to perceived brightness
+      float[,] grayData = ImageLoader.LoadGrayscale(imagePath, s_widthDots, s_gamma, rotateIfWide, out int rows);
 
       // Create ESC/POS raster image
-      byte[] escposImage = CreateEscPosRasterImage(bitmap);
+      byte[] escposImage = CreateEscPosRasterImage(grayData, rows);
 
-      // Send to printer
-      RawPrinter.SendBytes(printerName, escposImage);
-
+      byte[] trailer;
       if (s_autoCut) {
          // Two concatenated ESC/POS commands:
          //   ESC d n  (0x1B 0x64 0x06): "Print and Feed n Lines" — advances the paper by 6 lines
          //            so the printed output clears the cutter blade before cutting.
          //   GS  V 0  (0x1D 0x56 0x00): "Select Cut Mode and Cut Paper" with mode 0 = full cut —
          //            drives the built-in guillotine cutter to sever the paper completely.
-         byte[] cutCommand = [0x1B, 0x64, 0x06, 0x1D, 0x56, 0x00];
-         RawPrinter.SendBytes(printerName, cutCommand);
+         trailer = [0x1B, 0x64, 0x06, 0x1D, 0x56, 0x00];
       }
       else {
-         // Send four line feeds so the output is visible and the paper can be torn off
-         byte[] lineFeeds = Encoding.ASCII.GetBytes("\n\n\n\n");
-         RawPrinter.SendBytes(printerName, lineFeeds);
+         // Four line feeds so the output is visible and the paper can be torn off
+         trailer = [0x0A, 0x0A, 0x0A, 0x0A];
       }
+
+      // Image and trailer go out as ONE write. Sending them separately would make each transport
+      // reopen the target, which for a file target means starting again at offset 0 and overwriting
+      // the image, and for a print queue means a second job the spooler is free to reorder or delay.
+      byte[] job = new byte[escposImage.Length + trailer.Length];
+      Buffer.BlockCopy(escposImage, 0, job, 0, escposImage.Length);
+      Buffer.BlockCopy(trailer, 0, job, escposImage.Length, trailer.Length);
+
+      RawPrinter.SendBytes(target, job);
    }
 
    /// <summary>
-   /// Creates an ESC/POS raster image in GS v 0 format from a bitmap.
+   /// Creates an ESC/POS raster image in GS v 0 format from the grayscale image data.
    /// </summary>
-   static byte[] CreateEscPosRasterImage(Bitmap input) {
-      // Calculate scaling factor from input image width and maximum printer width
-      float scaleFactor = ((float) s_widthDots) / input.Width;
-
-      // Calculate height of scaled image
-      int scaledHeight = (int) Math.Round(input.Height * scaleFactor);
-
-      // Create scaled copy of input image
-      using Bitmap resized = new(input, new Size(s_widthDots, scaledHeight));
-
+   /// <param name="grayData">The scaled grayscale image, indexed as [x, y].</param>
+   /// <param name="scaledHeight">The height of the image in dot rows.</param>
+   static byte[] CreateEscPosRasterImage(float[,] grayData, int scaledHeight) {
       int dataLen = BytesPerRow * scaledHeight;
       byte[] imageData = new byte[dataLen];
 
-      // Calculate grayscale values of scaled image
-      float[,] grayData = new float[resized.Width, resized.Height];
-      for (int y = 0; y < resized.Height; ++y) {
-         for (int x = 0; x < resized.Width; ++x) {
-            grayData[x, y] = resized.GetPixel(x, y).GetPerceivedBrightness(s_gamma);
-         }
-      }
-
       // Prepare image data and convert to 1-bit using selected dithering
-      Dither(grayData, resized.Size, imageData);
+      Dither(grayData, s_widthDots, scaledHeight, imageData);
 
       // ESC/POS raster image header for GS v 0
       byte[] escposImageHeader = [
@@ -319,10 +305,11 @@ class Program {
    /// Applies dithering to the grayscale image data and writes the 1-bit image data to the provided array.
    /// </summary>
    /// <param name="grayData">The grayscale image as a 2D array.</param>
-   /// <param name="size">The size of the image.</param>
+   /// <param name="width">The width of the image in dots.</param>
+   /// <param name="height">The height of the image in dot rows.</param>
    /// <param name="imageData">The array to which the 1-bit image data is written.</param>
-   private static void Dither(float[,] grayData, Size size, byte[] imageData) {
-      int index = 0, w = size.Width, h = size.Height;
+   private static void Dither(float[,] grayData, int width, int height, byte[] imageData) {
+      int index = 0, w = width, h = height;
       float oldValue, threshold, newValue = 0, err;
       Action<float[,], int, int, int, int, float> ditherKernel = null;
       Func<int, int, float> getThreshold = null;

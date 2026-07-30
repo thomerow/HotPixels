@@ -4,8 +4,8 @@
 
 # HotPixels
 
-**HotPixels** is a small Windows command‑line tool that converts images into ESC/POS raster graphics and prints them on a thermal printer.  
-It supports multiple dithering algorithms and optional gamma correction to fine‑tune brightness and contrast.
+**HotPixels** is a small command‑line tool that converts images into ESC/POS raster graphics and prints them on a thermal printer.  
+It runs on **Windows and Linux** and supports multiple dithering algorithms and optional gamma correction to fine‑tune brightness and contrast.
 
 ---
 
@@ -17,22 +17,32 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 - Configurable **print width** in dots
 - Optional **automatic paper cut** (requires a cutter, e.g. Epson TM‑T88III)
 - Automatically rotates landscape images to portrait
-- Prints directly to any installed Windows ESC/POS printer
+- Prints to a **print queue**, a **device node** or a **network printer**, on Windows and Linux alike
 
 ---
 
 ## 📖 Usage
 
 ```
-HotPixels <printerName> <imagePath> [options]
+HotPixels <target> <imagePath> [options]
 ```
 
 ### 📥 Positional arguments
 
-- **printerName**  
-  Name of the installed ESC/POS printer.  
-  Use quotes if the name contains spaces.  
-  Run the program without arguments to list all installed printers.
+- **target**  
+  Where to print. The transport follows from the shape of the value:
+
+  | Shape | Transport | Examples |
+  |---|---|---|
+  | `host:port` | TCP socket (network printers listen on port 9100) | `192.168.1.50:9100` |
+  | An absolute path | Written to directly | `/dev/usb/lp0`, `/dev/lp0`, `C:\out.bin` |
+  | Anything else | A print queue — the Windows spooler, or CUPS via `lp -o raw` | `EPSON TM-T88III`, `\\server\printer` |
+
+  Use quotes if the value contains spaces.  
+  Run the program without arguments to list the targets available on your machine.
+
+  Writing to an absolute path is also the easiest way to inspect the generated ESC/POS bytes without
+  using paper. IPv6 literals are not supported as network targets.
 
 - **imagePath**  
   Path to the image file.
@@ -79,13 +89,29 @@ HotPixels "ESC POS USB" logo.bmp --dither=Jarvis --gamma=0.6
 HotPixels "Epson TM-T88III" receipt.png --dither=Stucki --width=512 --cut
 ```
 
+### 🐧 Print to a USB printer on Linux
+```bash
+HotPixels /dev/usb/lp0 photo.jpg --dither=Atkinson
+```
+
+### 🌐 Print to a network printer
+```bash
+HotPixels 192.168.1.50:9100 photo.jpg --width=512
+```
+
+### 🔍 Inspect the generated ESC/POS bytes without using paper
+```bash
+HotPixels /tmp/out.bin photo.jpg --width=512
+xxd /tmp/out.bin | head
+```
+
 ---
 
 ## 🛠️ Requirements
 
-- Windows  
-- .NET 8 or newer  
-- An ESC/POS‑compatible thermal printer installed in the system
+- Windows or Linux  
+- .NET 10 or newer  
+- An ESC/POS‑compatible thermal printer
 
 ---
 
@@ -137,6 +163,70 @@ HotPixels "ESC POS USB" image.png
 
 ESC/POS is a **raw byte protocol**, not a page-layout language.  
 Windows GDI drivers do not understand ESC/POS image commands, so you *must* use a raw-printing queue. The **Generic / Text Only** driver creates exactly that.
+
+---
+
+## 🐧 Setting Up an ESC/POS Thermal Printer on Linux
+
+You have two options. The device node is the simpler one and needs no configuration at all.
+
+### Option A: write to the device node
+
+A USB printer handled by the `usblp` kernel driver shows up as `/dev/usb/lp0`, and a parallel port as
+`/dev/lp0`. Check what is there:
+
+```bash
+ls -l /dev/usb/lp* /dev/lp* 2>/dev/null
+```
+
+Those nodes usually belong to group `lp`, so add yourself to it and log in again:
+
+```bash
+sudo usermod -aG lp $USER
+```
+
+Then print straight to it:
+
+```bash
+HotPixels /dev/usb/lp0 image.png
+```
+
+### Option B: a raw CUPS queue
+
+Use this for network printers, or when you want the printer shared. The queue must be **raw** so that
+CUPS passes the bytes through untouched — this is the exact counterpart of the Windows
+"Generic / Text Only" advice above:
+
+```bash
+# find the device URI
+lpinfo -v
+
+# create a raw queue (no driver, no filtering)
+sudo lpadmin -p TM-T88III -E -v usb://EPSON/TM-T88III -m raw
+```
+
+Then use the queue name as the target:
+
+```bash
+HotPixels TM-T88III image.png
+```
+
+HotPixels invokes `lp -d <queue> -o raw` for queue targets. The `-o raw` is what stops CUPS from
+running the data through its filter chain and mangling the ESC/POS control codes.
+
+---
+
+## 🧪 Tests
+
+```bash
+dotnet test
+```
+
+The suite drives the built executable as a child process and covers the command line, the target
+resolution rules and the generated ESC/POS bytes. No printer is involved — everything goes to a
+temporary file or a deliberately unreachable target.
+
+See [tests/README.md](./tests/README.md) for what each fixture covers and how to update a golden hash.
 
 ---
 

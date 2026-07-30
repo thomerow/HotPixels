@@ -2,7 +2,7 @@
 
    <PropertyGroup>
       <OutputType>Exe</OutputType>
-      <TargetFramework>net8.0-windows</TargetFramework>
+      <TargetFramework>net10.0</TargetFramework>
       <ImplicitUsings>enable</ImplicitUsings>
       <Nullable>disable</Nullable>
       <LangVersion>12.0</LangVersion>
@@ -19,8 +19,16 @@
       <AssemblyVersion>1.0.0</AssemblyVersion>
    </PropertyGroup>
 
+   <!-- This project sits in the repository root, so its default source glob would otherwise pull in
+        everything under tests\ as well. -->
    <ItemGroup>
-      <PackageReference Include="System.Drawing.Common" Version="8.0.22" />
+      <Compile Remove="tests\**" />
+      <None Remove="tests\**" />
+      <EmbeddedResource Remove="tests\**" />
+   </ItemGroup>
+
+   <ItemGroup>
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
    </ItemGroup>
 
 </Project>

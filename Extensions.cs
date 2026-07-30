@@ -1,7 +1,7 @@
 ﻿using HotPixels.Imaging.Dithering;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,7 +24,7 @@ internal static class Extensions {
    /// <param name="color">The color.</param>
    /// <param name="gamma">The gamma correction factor. Default is 0.75. Higher values make the image darker.</param>
    /// <returns>The perceived brightness as a byte value (0-255).</returns>
-   public static byte GetPerceivedBrightness(this Color color, double gamma = Program.DefaultGamma) {
+   public static byte GetPerceivedBrightness(this Rgb24 color, double gamma = Program.DefaultGamma) {
       double brightness = color.R * 0.299 + color.G * 0.587 + color.B * 0.114;
       brightness = Math.Pow(brightness / 255.0, gamma) * 255.0;
       return (byte) brightness;
