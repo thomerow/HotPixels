@@ -24,10 +24,10 @@ It supports multiple dithering algorithms and optional gamma correction to fine�
 ## 📖 Usage
 
 ```
-HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma] [widthDots] [autoCut]
+HotPixels <printerName> <imagePath> [options]
 ```
 
-### 📥 Arguments
+### 📥 Positional arguments
 
 - **printerName**  
   Name of the installed ESC/POS printer.  
@@ -37,24 +37,23 @@ HotPixels <printerName> <imagePath> [ditherModeIndex] [gamma] [widthDots] [autoC
 - **imagePath**  
   Path to the image file.
 
-- **ditherModeIndex** (optional, 1‑based integer)  
-  Selects a dithering algorithm.  
-  Run the program without arguments to list all modes.
+### ⚙️ Options
 
-- **gamma** (optional, float > 0)  
-  Adjusts perceived brightness.  
-  Lower = brighter output.  
-  Default: **0.75**
+Options may appear anywhere on the command line, and both `--name=value` and `--name value` are accepted.
 
-- **widthDots** (optional, positive multiple of 8)  
-  Sets the print width in dots.  
-  Must match the physical paper width your printer is configured for (e.g. 384 for 58 mm, 512 for 80 mm).  
-  Default: **384**
+| Option | Value | Default |
+|---|---|---|
+| `--dither=MODE` | Dithering algorithm, either by **name** (`Jarvis`, case-insensitive) or by its **number**. Run the program without arguments to list all modes | `2` (`Jarvis`) |
+| `--gamma=F` | Gamma correction, a number greater than 0. Lower = brighter output | `0.75` |
+| `--width=N` | Print width in dots, a positive multiple of 8. Must match the physical paper width your printer is configured for (e.g. 384 for 58 mm, 512 for 80 mm) | `384` |
+| `--cut[=0\|1]` | Send an automatic paper-cut command (`ESC d 6` + `GS V 0`) after printing. Requires a printer with a built-in guillotine cutter (e.g. Epson TM‑T88III) | off |
+| `--help`, `-h`, `/?` | Show usage | — |
 
-- **autoCut** (optional, `0` or `1`)  
-  Set to `1` to send an automatic paper-cut command (`ESC d 4` + `GS V 0`) after printing.  
-  Requires a printer with a built-in guillotine cutter (e.g. Epson TM‑T88III).  
-  Default: **0** (no cut)
+A bare `--cut` means on. To set it explicitly, use the inline form `--cut=0` or `--cut=1` — `--cut` never
+consumes the following argument, because that would be ambiguous with the positional arguments.
+
+An invalid value aborts with an error and exit code **1** without printing anything, so a typo cannot
+cost you a misprint.
 
 ---
 
@@ -67,17 +66,17 @@ HotPixels "EM5820" image.png
 
 ### 🖨️ Print with a specific dither mode
 ```powershell
-HotPixels "My Thermal Printer" photo.jpg 3
+HotPixels "My Thermal Printer" photo.jpg --dither=Stucki
 ```
 
 ### 🖨️ Print with dither mode + custom gamma
 ```powershell
-HotPixels "ESC POS USB" logo.bmp 2 0.6
+HotPixels "ESC POS USB" logo.bmp --dither=Jarvis --gamma=0.6
 ```
 
 ### 🖨️ Print with custom width (512 dots) and auto-cut enabled
 ```powershell
-HotPixels "Epson TM-T88III" receipt.png 3 0.75 512 1
+HotPixels "Epson TM-T88III" receipt.png --dither=Stucki --width=512 --cut
 ```
 
 ---

@@ -24,92 +24,20 @@ class Program {
    /// </summary>
    static void Main(string[] args) {
       Bitmap bitmap = null;
+      string printerName, imagePath;
 
-      // Printer name as the first argument, image file name as the second argument, optional dither
-      // mode as the third argument (as a number starting from 1), optional gamma value as the fourth argument:
-
-      // Too few arguments provided:
-      if (args.Length < 2) {
-         // Output a note that image path and printer name must be provided
-         Console.WriteLine("Please specify the printer name as the first argument and the path to the image as the second argument.");
-         Console.WriteLine("Example: HotPixels.exe \"My ESC/POS Printer\" C:\\Images\\testimage.png");
-
-         // List installed printers
-         Console.WriteLine("Installed printers:");
-         foreach (string printer in PrinterSettings.InstalledPrinters) {
-            Console.WriteLine($"  \"{printer}\"");
+      // Printer name and image path are positional; everything else is a named option
+      try {
+         if (!ParseArguments(args, out printerName, out imagePath)) {
+            PrintUsage();
+            return;
          }
-
-         // List possible dither modes from enum DitherMode automatically
-         Console.WriteLine($"Possible dither modes as optional third argument (numeric value starting from 1, default is {(int) DefaultDitherMode} ({DefaultDitherMode})):");
-         string[] ditherNames = Enum.GetNames(typeof(DitherMode));
-         for (int i = 0; i < ditherNames.Length; ++i) {
-            Console.WriteLine($"  {i + 1}: {ditherNames[i]}");
-         }
-
-         // Output note about gamma value
-         Console.WriteLine(
-            "Optionally, a gamma value (floating point number greater than 0) can be specified as the fourth argument. " +
-            $"Default value is {DefaultGamma.ToString(CultureInfo.InvariantCulture)} (lower values make the image brighter)."
-         );
-
-         // Output note about width in dots
-         Console.WriteLine(
-            $"Optionally, the print width in dots can be specified as the fifth argument (must be a multiple of 8). " +
-            $"Default value is {DefaultWidthDots}."
-         );
-
-         // Output note about auto-cut
-         Console.WriteLine(
-            "Optionally, specify 1 as the sixth argument to automatically cut the paper after printing (requires a cutter, e.g. Epson TM-T88III). " +
-            "Default is 0 (no auto-cut)."
-         );
+      }
+      catch (ArgumentError ex) {
+         Console.Error.WriteLine($"Error: {ex.Message}");
+         Console.Error.WriteLine("Run HotPixels without arguments for usage information.");
+         Environment.Exit(1);
          return;
-      }
-
-      // Use first argument as printer name (ESC/POS capable printer, must be in quotes if name contains spaces)
-      string printerName = args[0];
-      // Rough verification if printer name is empty
-      if (string.IsNullOrWhiteSpace(printerName)) {
-         Console.WriteLine("Invalid printer name specified.");
-         return;
-      }
-
-      // Use second argument as image path
-      string imagePath = args[1];
-      // Get absolute path
-      imagePath = Path.GetFullPath(imagePath);
-
-      // Use third argument as dither mode (1-based)
-      if (args.Length >= 3 && int.TryParse(args[2], out int ditherModeIndex)) {
-         if (ditherModeIndex < 1 || ditherModeIndex > Enum.GetValues<DitherMode>().Length) {
-            Console.WriteLine($"Invalid dither mode index. Default value {s_ditherMode} will be used.");
-         }
-         else {
-            s_ditherMode = (DitherMode) ditherModeIndex;
-            Console.WriteLine($"Dither mode set to {s_ditherMode}.");
-         }
-      }
-
-      // If a fourth argument is provided, use as gamma value (parse with invariant culture)
-      if (args.Length >= 4 && double.TryParse(args[3], NumberStyles.Float, CultureInfo.InvariantCulture, out double gamma)) {
-         if (gamma <= 0) Console.WriteLine($"Gamma value must be greater than 0. Default value {s_gamma.ToString(CultureInfo.InvariantCulture)} will be used.");
-         else s_gamma = gamma;
-      }
-
-      // If a fifth argument is provided, use as width in dots (must be a multiple of 8)
-      if (args.Length >= 5 && int.TryParse(args[4], out int widthDots)) {
-         if (widthDots <= 0 || widthDots % 8 != 0)
-            Console.WriteLine($"Width must be a positive multiple of 8. Default value {DefaultWidthDots} will be used.");
-         else {
-            s_widthDots = widthDots;
-            Console.WriteLine($"Print width set to {s_widthDots} dots.");
-         }
-      }
-
-      // If a sixth argument is provided, use as auto-cut flag (1 = cut, 0 = no cut)
-      if (args.Length >= 6 && int.TryParse(args[5], out int autoCut)) {
-         s_autoCut = autoCut != 0;
       }
 
       // Load image
@@ -125,6 +53,183 @@ class Program {
       using (bitmap) {
          SendBitmapToPrinter(printerName, bitmap);
       }
+   }
+
+   /// <summary>
+   /// Thrown when the command line cannot be parsed. The message is shown to the user.
+   /// </summary>
+   private sealed class ArgumentError(string message) : Exception(message);
+
+   /// <summary>
+   /// Prints usage information, the installed printers and the available dither modes.
+   /// </summary>
+   private static void PrintUsage() {
+      Console.WriteLine("Usage: HotPixels <printerName> <imagePath> [options]");
+      Console.WriteLine("Example: HotPixels.exe \"My ESC/POS Printer\" C:\\Images\\testimage.png --dither=Atkinson");
+      Console.WriteLine();
+
+      Console.WriteLine("Positional arguments:");
+      Console.WriteLine("  printerName    Name of the installed ESC/POS printer (quote it if it contains spaces).");
+      Console.WriteLine("  imagePath      Path to the image file.");
+      Console.WriteLine();
+
+      // Options may be written as --name=value or --name value
+      Console.WriteLine("Options (both --name=value and --name value are accepted):");
+      Console.WriteLine($"  --dither=MODE  Dithering algorithm, by name or number. Default is {(int) DefaultDitherMode} ({DefaultDitherMode}).");
+      Console.WriteLine($"  --gamma=F      Gamma correction, a number greater than 0. Default is {DefaultGamma.ToString(CultureInfo.InvariantCulture)}");
+      Console.WriteLine("                 (lower values make the image brighter).");
+      Console.WriteLine($"  --width=N      Print width in dots, a positive multiple of 8. Default is {DefaultWidthDots}.");
+      Console.WriteLine("                 Must match the paper width the printer is configured for");
+      Console.WriteLine("                 (e.g. 384 for 58 mm, 512 for 80 mm).");
+      Console.WriteLine("  --cut[=0|1]    Cut the paper after printing (requires a cutter, e.g. Epson TM-T88III).");
+      Console.WriteLine("                 A bare --cut means on; use --cut=0 or --cut=1 to set it explicitly.");
+      Console.WriteLine("  --help, -h, /? Show this help.");
+      Console.WriteLine();
+
+      // List installed printers
+      Console.WriteLine("Installed printers:");
+      foreach (string printer in PrinterSettings.InstalledPrinters) {
+         Console.WriteLine($"  \"{printer}\"");
+      }
+      Console.WriteLine();
+
+      // List possible dither modes from enum DitherMode automatically. Either spelling works, so
+      // --dither=Jarvis and --dither=2 are equivalent.
+      Console.WriteLine("Dither modes (--dither accepts either the name or the number):");
+      foreach (DitherMode mode in Enum.GetValues<DitherMode>()) {
+         Console.WriteLine($"  {(int) mode}: {mode}");
+      }
+   }
+
+   /// <summary>
+   /// Parses the command line into the printer name, the image path and the global settings.
+   /// </summary>
+   /// <returns>True if the arguments are usable, false if the usage information should be shown.</returns>
+   /// <exception cref="ArgumentError">The command line is malformed.</exception>
+   private static bool ParseArguments(string[] args, out string printerName, out string imagePath) {
+      printerName = null;
+      imagePath = null;
+
+      if (args.Length == 0) return false;
+
+      List<string> positional = [];
+
+      for (int i = 0; i < args.Length; ++i) {
+         string arg = args[i];
+
+         if (arg is "-h" or "/?") return false;
+
+         if (!arg.StartsWith("--", StringComparison.Ordinal)) {
+            positional.Add(arg);
+            continue;
+         }
+
+         // Split "--name=value" into its two halves; without "=" the value comes from the next argument
+         int eq = arg.IndexOf('=');
+         string name = (eq < 0 ? arg[2..] : arg[2..eq]).ToLowerInvariant();
+         string inlineValue = eq < 0 ? null : arg[(eq + 1)..];
+
+         if (name == "help") return false;
+
+         // --cut is a flag: a bare --cut means on, and it never consumes the following argument,
+         // which would otherwise be ambiguous with the positional arguments.
+         if (name == "cut") {
+            s_autoCut = inlineValue is null || ParseCut(inlineValue);
+            continue;
+         }
+
+         if (name is not ("dither" or "gamma" or "width")) {
+            throw new ArgumentError($"unknown option \"--{name}\".");
+         }
+
+         string value = inlineValue;
+         if (value is null) {
+            // Take the next argument as the value, unless it is an option itself or missing entirely
+            if (i + 1 >= args.Length || args[i + 1].StartsWith("--", StringComparison.Ordinal)) {
+               throw new ArgumentError($"--{name} requires a value.");
+            }
+            value = args[++i];
+         }
+
+         switch (name) {
+            case "dither": s_ditherMode = ParseDitherMode(value); break;
+            case "gamma": s_gamma = ParseGamma(value); break;
+            case "width": s_widthDots = ParseWidthDots(value); break;
+         }
+      }
+
+      if (positional.Count > 2) {
+         throw new ArgumentError(
+            $"unexpected argument \"{positional[2]}\". Only the printer name and the image path are " +
+            "positional; every setting is a named option such as --dither, --gamma, --width or --cut."
+         );
+      }
+      if (positional.Count < 2) {
+         throw new ArgumentError("both a printer name and an image path are required.");
+      }
+
+      // Printer name (ESC/POS capable printer, must be in quotes if the name contains spaces)
+      printerName = positional[0];
+      if (string.IsNullOrWhiteSpace(printerName)) throw new ArgumentError("the printer name is empty.");
+
+      // Image path, resolved to an absolute path
+      imagePath = Path.GetFullPath(positional[1]);
+
+      // Confirm the settings actually in effect
+      Console.WriteLine($"Dither mode: {s_ditherMode}");
+      Console.WriteLine($"Gamma: {s_gamma.ToString(CultureInfo.InvariantCulture)}");
+      Console.WriteLine($"Print width: {s_widthDots} dots");
+      Console.WriteLine($"Auto-cut: {(s_autoCut ? "on" : "off")}");
+
+      return true;
+   }
+
+   /// <summary>
+   /// Parses a dither mode given either by name (case-insensitive) or by its 1-based number.
+   /// </summary>
+   private static DitherMode ParseDitherMode(string value) {
+      // DitherMode is numbered from 1, so its underlying values are exactly the numbers users type,
+      // and Enum.TryParse accepts both spellings. IsDefined rejects out-of-range numbers.
+      if (Enum.TryParse(value, ignoreCase: true, out DitherMode mode) && Enum.IsDefined(mode)) return mode;
+
+      throw new ArgumentError(
+         $"invalid value \"{value}\" for --dither; expected a mode name or a number from 1 to " +
+         $"{Enum.GetValues<DitherMode>().Length}. Run HotPixels without arguments to list the modes."
+      );
+   }
+
+   /// <summary>
+   /// Parses the gamma value, which must be greater than 0. Always uses the invariant culture, so the
+   /// decimal separator is a point regardless of the system's regional settings.
+   /// </summary>
+   private static double ParseGamma(string value) {
+      if (!double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out double gamma) || gamma <= 0) {
+         throw new ArgumentError($"invalid value \"{value}\" for --gamma; expected a number greater than 0.");
+      }
+
+      return gamma;
+   }
+
+   /// <summary>
+   /// Parses the print width in dots, which must be a positive multiple of 8.
+   /// </summary>
+   private static int ParseWidthDots(string value) {
+      if (!int.TryParse(value, out int widthDots) || widthDots <= 0 || widthDots % 8 != 0) {
+         throw new ArgumentError($"invalid value \"{value}\" for --width; expected a positive multiple of 8.");
+      }
+
+      return widthDots;
+   }
+
+   /// <summary>
+   /// Parses the explicit value of the --cut flag.
+   /// </summary>
+   private static bool ParseCut(string value) {
+      if (!int.TryParse(value, out int cut)) {
+         throw new ArgumentError($"invalid value \"{value}\" for --cut; expected 0 or 1.");
+      }
+
+      return cut != 0;
    }
 
    /// <summary>
